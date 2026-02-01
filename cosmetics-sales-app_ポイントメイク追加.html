@@ -1,0 +1,2828 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>化粧品販売管理アプリ</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Noto Sans JP', 'Hiragino Sans', 'Meiryo', sans-serif;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    // ============================================
+    // 化粧品販売管理アプリ
+    // 会計年度: 3月〜翌2月
+    // ============================================
+
+    const { useState, useEffect, useRef } = React;
+
+    // 製品マスタデータ
+    const PRODUCT_MASTER = {
+      skincare: {
+        name: 'スキンケア',
+        taxRate: 10,
+        products: [
+          { code: '421628', name: 'アルソアクイーンシルバー(135g)', price: 4000, category: 'QS' },
+          { code: '421636', name: 'アルソアクイーンシルバー(70g)', price: 2200, category: 'QS' },
+          { code: '421644', name: 'アルソアクイーンシルバーPF(70g)', price: 2200, category: 'QS' },
+          { code: '421652', name: 'アルソア クレイパック', price: 3500, category: 'P' },
+          { code: '421660', name: 'アルソア ローションI', price: 3500, category: 'L' },
+          { code: '421678', name: 'アルソア ローションII', price: 3500, category: 'L' },
+          { code: '421686', name: 'アルソア セルローション', price: 4800, category: 'L' },
+          { code: '430265', name: 'アルソア エッセンスI', price: 5000, category: 'ES' },
+          { code: '421701', name: 'アルソア エッセンスII', price: 8000, category: 'ES' },
+          { code: '430273', name: 'アルソア セルエッセンス', price: 13000, category: 'ES' },
+          { code: '421727', name: 'アルソア モイストベイス', price: 4500, category: 'other' },
+          { code: '430281', name: 'アルソア セルセラム', price: 8000, category: 'other' },
+          { code: '446775', name: 'アルソア エス', price: 5000, category: 'other' },
+          { code: '421751', name: 'アルソア セルジェル', price: 7000, category: 'other' },
+          { code: '421769', name: 'アルソア エッセンスマスク', price: 7500, category: 'other' },
+          { code: '421777', name: 'アルソア モイスチュアージェル', price: 3800, category: 'other' },
+          { code: '419540', name: 'アムニーAP ソープ', price: 3500, category: 'other' },
+          { code: '429789', name: 'アムニーAP スキンソープ', price: 2000, category: 'other' },
+          { code: '386898', name: 'アムニーAP スキンローション', price: 2700, category: 'other' },
+          { code: '386905', name: 'アムニーAP スキンコート', price: 2500, category: 'other' },
+        ]
+      },
+      baseMakeup: {
+        name: 'ベースメイクアップ',
+        taxRate: 10,
+        products: [
+          { code: '441501', name: 'リベストナチュラルプレペア', price: 4000, category: 'other' },
+          { code: '441519', name: 'リベストSPプレペア', price: 4200, category: 'SP' },
+          { code: '441527', name: 'リベストモイストプレペア', price: 4500, category: 'other' },
+          { code: '441535', name: 'リベストリキッドF ナチュラルピンク(01)', price: 4000, category: 'other' },
+          { code: '441543', name: 'リベストリキッドF ナチュラルライト(02)', price: 4000, category: 'other' },
+          { code: '441551', name: 'リベストリキッドF ナチュラル(03)', price: 4000, category: 'other' },
+          { code: '441569', name: 'リベストリキッドF オークルライト(04)', price: 4000, category: 'other' },
+          { code: '441577', name: 'リベストリキッドF ナチュラダーク(05)', price: 4000, category: 'other' },
+          { code: '441585', name: 'リベストリキッドF ヴェールピンクライト(11)', price: 6000, category: 'other' },
+          { code: '441593', name: 'リベストリキッドF ヴェールナチュラル(12)', price: 6000, category: 'other' },
+          { code: '441600', name: 'リベストリキッドF ヴェールオークルライト(13)', price: 6000, category: 'other' },
+          { code: '448490', name: 'リベストリキッドF ヴェールナチュラダーク(14)', price: 6000, category: 'other' },
+          { code: '441618', name: 'リベストシルキーパウダーF ピンク(21)', price: 5600, category: 'other' },
+          { code: '441626', name: 'リベストシルキーパウダーF ナチュラルライト(22)', price: 5600, category: 'other' },
+          { code: '441759', name: 'メイクオフ', price: 3000, category: 'MO' },
+        ]
+      },
+      hairBodyCare: {
+        name: 'ヘアケア&ボディケア',
+        taxRate: 10,
+        products: [
+          { code: '429151', name: 'アルソア シャンプー', price: 2500, category: 'other' },
+          { code: '437250', name: 'アルソア シャンプー リフィル', price: 2000, category: 'other' },
+          { code: '429177', name: 'アルソア コンディショナー', price: 2500, category: 'other' },
+          { code: '437260', name: 'アルソア コンディショナー リフィル', price: 2000, category: 'other' },
+          { code: '429193', name: 'アルソア EXシャンプー', price: 2600, category: 'other' },
+          { code: '437270', name: 'アルソア EXシャンプー リフィル', price: 2200, category: 'other' },
+          { code: '429218', name: 'アルソア EXトリートメント', price: 2800, category: 'other' },
+          { code: '429226', name: 'アルソア ヘアミスト', price: 1800, category: 'other' },
+          { code: '429234', name: 'アルソア トリートメントオイル', price: 2800, category: 'other' },
+          { code: '429242', name: 'アルソア スカルプローション', price: 2700, category: 'other' },
+          { code: '429250', name: 'アルソア スカルプエッセンス', price: 4500, category: 'other' },
+          { code: '378952', name: 'プリシーノバスパウダー', price: 3000, category: 'other' },
+          { code: '381997', name: 'プリシーノボディソープ', price: 2500, category: 'other' },
+          { code: '382002', name: 'プリシーノボディソープ リフィル', price: 1700, category: 'other' },
+          { code: '421339', name: 'プリシーノボディミスト', price: 2000, category: 'other' },
+          { code: '22814', name: 'アピブラシ', price: 3000, category: 'other' },
+          { code: '445933', name: 'しらきぬの湯s', price: 3000, category: 'other' },
+        ]
+      },
+      healthcare: {
+        name: 'ヘルスケア',
+        taxRate: 8,
+        products: [
+          { code: '447731', name: 'アルソア 酵素', price: 10000, category: '酵素' },
+          { code: '447757', name: 'アルソア 酵素プラス レギュラー', price: 5500, category: '酵素' },
+          { code: '447765', name: 'アルソア 酵素プラス ラージ', price: 15000, category: '酵素' },
+          { code: '447781', name: 'アルソア 酵素G', price: 20000, category: '酵素' },
+          { code: '447806', name: 'アルソア 白鶴霊芝エクストラ 10本入', price: 12000, category: 'other' },
+          { code: '447814', name: 'アルソア 白鶴霊芝エクストラ 30本入', price: 32000, category: 'other' },
+          { code: '447856', name: 'アルソア 霊芝 レギュラー', price: 12000, category: 'other' },
+          { code: '447864', name: 'アルソア 霊芝 ラージ', price: 30000, category: 'other' },
+          { code: '448028', name: 'アルソア オメガ3', price: 9000, category: 'other' },
+          { code: '447963', name: 'アルソア シナヤカ レギュラー', price: 9000, category: 'other' },
+          { code: '447971', name: 'アルソア シナヤカ ラージ', price: 24000, category: 'other' },
+          { code: '447898', name: 'アルソア ビエッセS', price: 10000, category: 'other' },
+          { code: '447913', name: 'アルソア ビエッセEX', price: 20000, category: 'other' },
+          { code: '448010', name: 'アルソア Fe', price: 4000, category: 'other' },
+          { code: '448044', name: 'アルソア クリアー', price: 3800, category: 'other' },
+          { code: '447830', name: 'アルソア 白鶴霊芝AG', price: 12000, category: 'other' },
+          { code: '447997', name: 'アルソア ミネラルプラス', price: 5800, category: 'other' },
+          { code: '447947', name: 'アルソア セルエナジィV', price: 10000, category: 'other' },
+          { code: '447939', name: 'アルソア リナカンC', price: 5000, category: 'other' },
+          { code: '447880', name: 'アルソア ピュアカルCa', price: 6500, category: 'other' },
+          { code: '448052', name: 'アルソア 白鶴霊芝ティー', price: 3800, category: 'other' },
+        ]
+      },
+      pointMakeup: {
+        name: 'ポイントメイクアップ',
+        taxRate: 10,
+        products: [
+          // リベストシェードオンリフィル ¥1,400
+          { code: '441816', name: 'リベストシェードオンリフィル マザーシェル(C201)', price: 1400, category: '色' },
+          { code: '441824', name: 'リベストシェードオンリフィル シルバームーン(C202)', price: 1400, category: '色' },
+          { code: '441832', name: 'リベストシェードオンリフィル カームブラック(C203)', price: 1400, category: '色' },
+          { code: '441840', name: 'リベストシェードオンリフィル ダイヤモンドダスト(N204)', price: 1400, category: '色' },
+          { code: '441858', name: 'リベストシェードオンリフィル トワイライトベージュ(N205)', price: 1400, category: '色' },
+          { code: '441866', name: 'リベストシェードオンリフィル ジャスパーレッド(N206)', price: 1400, category: '色' },
+          { code: '441874', name: 'リベストシェードオンリフィル サンライト(W207)', price: 1400, category: '色' },
+          { code: '441882', name: 'リベストシェードオンリフィル オレンジミスト(W208)', price: 1400, category: '色' },
+          { code: '441890', name: 'リベストシェードオンリフィル ピノブラウン(W209)', price: 1400, category: '色' },
+          { code: '441907', name: 'リベストシェードオンリフィル オーロラブルー(C210)', price: 1400, category: '色' },
+          { code: '441915', name: 'リベストシェードオンリフィル オーシャンレイ(C211)', price: 1400, category: '色' },
+          { code: '441923', name: 'リベストシェードオンリフィル コモレビイエロー(N212)', price: 1400, category: '色' },
+          { code: '441931', name: 'リベストシェードオンリフィル ローズクラウド(N213)', price: 1400, category: '色' },
+          { code: '441949', name: 'リベストシェードオンリフィル デューンゴールド(W214)', price: 1400, category: '色' },
+          { code: '441957', name: 'リベストシェードオンリフィル サバンナグリーン(W215)', price: 1400, category: '色' },
+          // リベストブラッシュオンリフィル ¥1,800
+          { code: '441965', name: 'リベストブラッシュオンリフィル ハピネスピンク(C401)', price: 1800, category: '色' },
+          { code: '441973', name: 'リベストブラッシュオンリフィル ディライトコーラル(N402)', price: 1800, category: '色' },
+          { code: '441981', name: 'リベストブラッシュオンリフィル チアフルオレンジ(W403)', price: 1800, category: '色' },
+          { code: '441999', name: 'リベストブラッシュオンリフィル グレースローズ(C404)', price: 1800, category: '色' },
+          { code: '442004', name: 'リベストブラッシュオンリフィル シフォンホワイト(N405)', price: 1800, category: '色' },
+          { code: '442012', name: 'リベストブラッシュオンリフィル セピアベージュ(N406)', price: 1800, category: '色' },
+          // リベストリップカラーリフィル ¥1,000
+          { code: '442020', name: 'リベストリップカラーリフィル ビーナスピンク(C701)', price: 1000, category: '色' },
+          { code: '442038', name: 'リベストリップカラーリフィル パレスピンク(C702)', price: 1000, category: '色' },
+          { code: '442046', name: 'リベストリップカラーリフィル セーブルローズ(C703)', price: 1000, category: '色' },
+          { code: '442054', name: 'リベストリップカラーリフィル グアバピンク(N704)', price: 1000, category: '色' },
+          { code: '442062', name: 'リベストリップカラーリフィル オペラレッド(N705)', price: 1000, category: '色' },
+          { code: '442070', name: 'リベストリップカラーリフィル レッドリリー(N706)', price: 1000, category: '色' },
+          { code: '442088', name: 'リベストリップカラーリフィル オレンジゼラニウム(W707)', price: 1000, category: '色' },
+          { code: '442096', name: 'リベストリップカラーリフィル ピーチヴェール(W708)', price: 1000, category: '色' },
+          { code: '442103', name: 'リベストリップカラーリフィル ガナッシュブラウン(W709)', price: 1000, category: '色' },
+          { code: '442111', name: 'リベストリップカラーリフィル マジックティント(80)', price: 1000, category: '色' },
+          // その他ポイントメイク商品
+          { code: '446098', name: 'リベストリップコート', price: 3000, category: 'other' },
+          { code: '446080', name: 'リベストリップグロス シャイニークリア', price: 2300, category: 'other' },
+          { code: '446006', name: 'リベストアイブロウホルダー', price: 1700, category: 'other' },
+          { code: '445983', name: 'リベストアイブロウリフィル ブラウン(55)', price: 1700, category: 'other' },
+          { code: '445991', name: 'リベストアイブロウリフィル グレー(56)', price: 1700, category: 'other' },
+          { code: '446048', name: 'リベストアイブロウパウダー', price: 3800, category: 'other' },
+          { code: '446056', name: 'リベストアイブロウパウダー リフィル', price: 2700, category: 'other' },
+          { code: '446030', name: 'リベストアイライナーホルダー', price: 1700, category: 'other' },
+          { code: '446014', name: 'リベストアイライナーリフィル ブラウン(50)', price: 1700, category: 'other' },
+          { code: '446022', name: 'リベストアイライナーリフィル グレー(51)', price: 1700, category: 'other' },
+          { code: '446064', name: 'リベストリキッドアイライナー ブラック', price: 2100, category: 'other' },
+          { code: '446072', name: 'リベストナチュラルロングマスカラ ブラック', price: 3300, category: 'other' },
+          { code: '441759', name: 'リベストメイクオフ', price: 3000, category: 'other' },
+          { code: '420670', name: '眉ブラシ＆コーム', price: 500, category: 'other' },
+          { code: '448622', name: 'リップブラシ', price: 1500, category: 'other' },
+        ]
+      }
+    };
+
+    // 製品カテゴリ略称マッピング
+    const CATEGORY_ABBREV = {
+      'QS': 'クイーンシルバー',
+      'L': 'ローション',
+      'P': 'パック',
+      'ES': 'エッセンス',
+      'SP': 'SPプレペア',
+      'MO': 'メイクオフ',
+      '酵素': '酵素',
+      '色': '色',
+      'other': 'その他'
+    };
+
+    // 全製品リストを取得（カスタム製品を含む）
+    const getAllProducts = (customProducts = {}) => {
+      const products = [];
+      Object.entries(PRODUCT_MASTER).forEach(([key, category]) => {
+        // 組み込み製品
+        category.products.forEach(product => {
+          products.push({
+            ...product,
+            categoryName: category.name,
+            categoryKey: key,
+            taxRate: category.taxRate,
+            isCustom: false
+          });
+        });
+        // カスタム製品
+        if (customProducts[key]) {
+          customProducts[key].forEach(product => {
+            products.push({
+              ...product,
+              categoryName: category.name,
+              categoryKey: key,
+              taxRate: category.taxRate,
+              isCustom: true
+            });
+          });
+        }
+      });
+      return products;
+    };
+
+    // 製品コードから製品を検索（カスタム製品を含む）
+    const findProductByCode = (code, customProducts = {}) => {
+      return getAllProducts(customProducts).find(p => p.code === code);
+    };
+
+    // 会計年度を取得（3月〜翌2月）
+    const getFiscalYear = (date) => {
+      const d = new Date(date);
+      const month = d.getMonth() + 1;
+      const year = d.getFullYear();
+      return month >= 3 ? year : year - 1;
+    };
+
+    // 会計年度の月リスト
+    const FISCAL_MONTHS = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2];
+
+    // PDF出力用のユーティリティ関数
+    const printDocument = (content, title, orientation = 'portrait') => {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ja">
+        <head>
+          <meta charset="UTF-8">
+          <title>${title}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+          <style>
+            @page {
+              size: A4 ${orientation};
+              margin: 15mm;
+            }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body {
+              font-family: 'Noto Sans JP', 'Hiragino Sans', 'Meiryo', sans-serif;
+              font-size: 10pt;
+              line-height: 1.4;
+              color: #333;
+            }
+            .print-header {
+              text-align: center;
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 2px solid #333;
+            }
+            .print-header h1 {
+              font-size: 16pt;
+              margin-bottom: 5px;
+            }
+            .print-header .subtitle {
+              font-size: 10pt;
+              color: #666;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 9pt;
+            }
+            th, td {
+              border: 1px solid #333;
+              padding: 4px 6px;
+              text-align: left;
+            }
+            th {
+              background-color: #f0f0f0;
+              font-weight: bold;
+            }
+            thead {
+              display: table-header-group;
+            }
+            tbody {
+              display: table-row-group;
+            }
+            tr {
+              page-break-inside: avoid;
+            }
+            .section {
+              margin-bottom: 20px;
+            }
+            .section-title {
+              font-size: 12pt;
+              font-weight: bold;
+              margin-bottom: 10px;
+              padding: 5px;
+              background-color: #f5f5f5;
+            }
+            .summary-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              margin-bottom: 20px;
+            }
+            .summary-item {
+              border: 1px solid #ccc;
+              padding: 10px;
+              text-align: center;
+            }
+            .summary-item .label {
+              font-size: 9pt;
+              color: #666;
+            }
+            .summary-item .value {
+              font-size: 14pt;
+              font-weight: bold;
+            }
+            .count-grid {
+              display: grid;
+              grid-template-columns: repeat(12, 1fr);
+              gap: 3px;
+            }
+            .count-cell {
+              border: 1px solid #ccc;
+              padding: 3px;
+              text-align: center;
+              font-size: 7pt;
+              min-height: 40px;
+            }
+            .count-cell.filled {
+              background-color: #e8f5e9;
+            }
+            .count-cell .num {
+              font-weight: bold;
+              color: #888;
+            }
+            .count-cell .name {
+              font-size: 6pt;
+              overflow: hidden;
+            }
+            .text-right {
+              text-align: right;
+            }
+            .text-center {
+              text-align: center;
+            }
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          ${content}
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    };
+
+    // ============================================
+    // メインアプリコンポーネント
+    // ============================================
+    function CosmeticsSalesApp() {
+      const [currentView, setCurrentView] = useState('dashboard');
+      const [customers, setCustomers] = useState([]);
+      const [sales, setSales] = useState([]);
+      const [monthlyReports, setMonthlyReports] = useState([]);
+      const [customProducts, setCustomProducts] = useState({
+        skincare: [],
+        baseMakeup: [],
+        hairBodyCare: [],
+        healthcare: [],
+        pointMakeup: []
+      });
+      const [displayCutoff, setDisplayCutoff] = useState(null); // 履歴表示の基準日
+      const [notification, setNotification] = useState(null);
+
+      useEffect(() => {
+        loadData();
+      }, []);
+
+      const loadData = () => {
+        try {
+          const savedCustomers = localStorage.getItem('cosmetics_customers');
+          const savedSales = localStorage.getItem('cosmetics_sales');
+          const savedReports = localStorage.getItem('cosmetics_monthly_reports');
+          const savedCustomProducts = localStorage.getItem('cosmetics_custom_products');
+          const savedDisplayCutoff = localStorage.getItem('cosmetics_display_cutoff');
+          
+          if (savedCustomers) setCustomers(JSON.parse(savedCustomers));
+          if (savedSales) setSales(JSON.parse(savedSales));
+          if (savedReports) setMonthlyReports(JSON.parse(savedReports));
+          if (savedCustomProducts) setCustomProducts(JSON.parse(savedCustomProducts));
+          if (savedDisplayCutoff) setDisplayCutoff(JSON.parse(savedDisplayCutoff));
+        } catch (e) {
+          console.error('データ読み込みエラー:', e);
+        }
+      };
+
+      const saveData = (newCustomers = customers, newSales = sales, newReports = monthlyReports, newCustomProducts = customProducts, newDisplayCutoff = displayCutoff) => {
+        try {
+          localStorage.setItem('cosmetics_customers', JSON.stringify(newCustomers));
+          localStorage.setItem('cosmetics_sales', JSON.stringify(newSales));
+          localStorage.setItem('cosmetics_monthly_reports', JSON.stringify(newReports));
+          localStorage.setItem('cosmetics_custom_products', JSON.stringify(newCustomProducts));
+          localStorage.setItem('cosmetics_display_cutoff', JSON.stringify(newDisplayCutoff));
+        } catch (e) {
+          console.error('データ保存エラー:', e);
+        }
+      };
+
+      const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 3000);
+      };
+
+      const addCustomer = (customer) => {
+        const newCustomers = [...customers, { ...customer, id: Date.now() }];
+        setCustomers(newCustomers);
+        saveData(newCustomers, sales, monthlyReports);
+        showNotification('顧客を登録しました');
+      };
+
+      const updateCustomer = (id, updates) => {
+        const newCustomers = customers.map(c => c.id === id ? { ...c, ...updates } : c);
+        setCustomers(newCustomers);
+        saveData(newCustomers, sales, monthlyReports);
+      };
+
+      const deleteCustomer = (id) => {
+        const customer = customers.find(c => c.id === id);
+        if (confirm(`「${customer?.name}」を削除しますか？\n※この顧客の売上データは残ります`)) {
+          const newCustomers = customers.filter(c => c.id !== id);
+          setCustomers(newCustomers);
+          saveData(newCustomers, sales, monthlyReports, customProducts);
+          showNotification('顧客を削除しました');
+        }
+      };
+
+      const addCustomProduct = (categoryKey, product) => {
+        // 商品コードの重複チェック
+        const allProducts = getAllProducts(customProducts);
+        if (allProducts.some(p => p.code === product.code)) {
+          showNotification('この商品コードは既に使用されています', 'error');
+          return false;
+        }
+        
+        const newProduct = {
+          ...product,
+          id: Date.now(),
+          isCustom: true
+        };
+        const newCustomProducts = {
+          ...customProducts,
+          [categoryKey]: [...(customProducts[categoryKey] || []), newProduct]
+        };
+        setCustomProducts(newCustomProducts);
+        saveData(customers, sales, monthlyReports, newCustomProducts);
+        showNotification('製品を追加しました');
+        return true;
+      };
+
+      const deleteCustomProduct = (categoryKey, productId) => {
+        const product = customProducts[categoryKey]?.find(p => p.id === productId);
+        if (confirm(`「${product?.name}」を削除しますか？\n※過去の売上データには影響しません`)) {
+          const newCustomProducts = {
+            ...customProducts,
+            [categoryKey]: customProducts[categoryKey].filter(p => p.id !== productId)
+          };
+          setCustomProducts(newCustomProducts);
+          saveData(customers, sales, monthlyReports, newCustomProducts);
+          showNotification('製品を削除しました');
+        }
+      };
+
+      const addSale = (sale) => {
+        const newSale = {
+          ...sale,
+          id: Date.now(),
+          createdAt: new Date().toISOString()
+        };
+        const newSales = [...sales, newSale];
+        setSales(newSales);
+        saveData(customers, newSales, monthlyReports, customProducts, displayCutoff);
+        showNotification('売上を登録しました');
+      };
+
+      const updateSale = (id, updatedSale) => {
+        const newSales = sales.map(s => 
+          s.id === id 
+            ? { ...s, ...updatedSale, updatedAt: new Date().toISOString() }
+            : s
+        );
+        setSales(newSales);
+        saveData(customers, newSales, monthlyReports, customProducts, displayCutoff);
+        showNotification('売上を更新しました');
+      };
+
+      const deleteSale = (id) => {
+        const sale = sales.find(s => s.id === id);
+        if (confirm(`${sale?.date} ${sale?.customerName}の売上を削除しますか？\n※この操作は取り消せません`)) {
+          const newSales = sales.filter(s => s.id !== id);
+          setSales(newSales);
+          saveData(customers, newSales, monthlyReports, customProducts, displayCutoff);
+          showNotification('売上を削除しました');
+        }
+      };
+
+      const clearSalesHistory = () => {
+        if (confirm('履歴表示をクリアして翌月の入力を開始しますか？\n\n※売上データは削除されません\n※レポート集計には影響しません')) {
+          const newCutoff = new Date().toISOString();
+          setDisplayCutoff(newCutoff);
+          saveData(customers, sales, monthlyReports, customProducts, newCutoff);
+          showNotification('履歴表示をクリアしました');
+        }
+      };
+
+      const saveMonthlyReport = (report) => {
+        const existingIndex = monthlyReports.findIndex(
+          r => r.year === report.year && r.month === report.month
+        );
+        let newReports;
+        if (existingIndex >= 0) {
+          newReports = [...monthlyReports];
+          newReports[existingIndex] = report;
+        } else {
+          newReports = [...monthlyReports, report];
+        }
+        setMonthlyReports(newReports);
+        saveData(customers, sales, newReports, customProducts, displayCutoff);
+        showNotification('月次レポートを保存しました');
+      };
+
+      const exportBackup = () => {
+        const data = {
+          exportDate: new Date().toISOString(),
+          version: '1.3',
+          customers,
+          sales,
+          monthlyReports,
+          customProducts,
+          displayCutoff
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cosmetics_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification('バックアップをエクスポートしました');
+      };
+
+      const importBackup = (file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (data.customers) setCustomers(data.customers);
+            if (data.sales) setSales(data.sales);
+            if (data.monthlyReports) setMonthlyReports(data.monthlyReports);
+            if (data.customProducts) setCustomProducts(data.customProducts);
+            if (data.displayCutoff) setDisplayCutoff(data.displayCutoff);
+            saveData(
+              data.customers || [], 
+              data.sales || [], 
+              data.monthlyReports || [],
+              data.customProducts || { skincare: [], baseMakeup: [], hairBodyCare: [], healthcare: [], pointMakeup: [] },
+              data.displayCutoff || null
+            );
+            showNotification('バックアップを復元しました');
+          } catch (err) {
+            showNotification('ファイルの読み込みに失敗しました', 'error');
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      const importCustomersFile = (file) => {
+        const reader = new FileReader();
+        const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+        
+        reader.onload = (e) => {
+          try {
+            let rows = [];
+            
+            if (isExcel) {
+              // Excelファイルの処理
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: 'array' });
+              const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+              const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+              rows = jsonData;
+            } else {
+              // CSVファイルの処理
+              const text = e.target.result;
+              rows = text.split('\n').filter(line => line.trim()).map(line => line.split(',').map(s => s.trim()));
+            }
+            
+            const newCustomers = [];
+            rows.forEach((row, index) => {
+              // ヘッダー行をスキップ（顧客名、名前、ランク等を含む場合）
+              if (index === 0) {
+                const firstCell = String(row[0] || '').toLowerCase();
+                if (firstCell.includes('顧客') || firstCell.includes('名前') || firstCell.includes('ランク') || firstCell === 'name') {
+                  return;
+                }
+              }
+              
+              const name = String(row[0] || '').trim();
+              const rank = String(row[1] || 'C').trim().toUpperCase();
+              
+              if (name && name.length > 0) {
+                const existing = customers.find(c => c.name === name);
+                if (!existing) {
+                  newCustomers.push({
+                    id: Date.now() + index,
+                    name,
+                    rank: ['A', 'B', 'C', 'D'].includes(rank) ? rank : 'C'
+                  });
+                }
+              }
+            });
+            
+            const allCustomers = [...customers, ...newCustomers];
+            setCustomers(allCustomers);
+            saveData(allCustomers, sales, monthlyReports, customProducts);
+            showNotification(`${newCustomers.length}件の顧客を追加しました`);
+          } catch (err) {
+            console.error('Import error:', err);
+            showNotification('ファイルの読み込みに失敗しました', 'error');
+          }
+        };
+        
+        if (isExcel) {
+          reader.readAsArrayBuffer(file);
+        } else {
+          reader.readAsText(file);
+        }
+      };
+
+      const menuItems = [
+        { id: 'dashboard', label: 'ダッシュボード', icon: '📊' },
+        { id: 'sales-input', label: '売上伝票入力', icon: '📝' },
+        { id: 'customer-list', label: 'お客様分布リスト', icon: '👥' },
+        { id: 'product-count', label: '製品別販売積算', icon: '📈' },
+        { id: 'monthly-report', label: '月末レポート', icon: '📋' },
+        { id: 'yearly-report', label: '年間ABC報告', icon: '📅' },
+        { id: 'master', label: 'マスタ管理', icon: '⚙️' },
+        { id: 'backup', label: 'データ管理', icon: '💾' },
+      ];
+
+      return (
+        <div style={styles.container}>
+          <aside style={styles.sidebar}>
+            <div style={styles.logo}>
+              <span style={styles.logoIcon}>💄</span>
+              <span style={styles.logoText}>販売管理</span>
+            </div>
+            <nav style={styles.nav}>
+              {menuItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentView(item.id)}
+                  style={{
+                    ...styles.navItem,
+                    ...(currentView === item.id ? styles.navItemActive : {})
+                  }}
+                >
+                  <span style={styles.navIcon}>{item.icon}</span>
+                  <span style={styles.navLabel}>{item.label}</span>
+                </button>
+              ))}
+            </nav>
+            <div style={styles.fiscalYear}>
+              会計年度: {getFiscalYear(new Date())}年度
+              <br />
+              <small>({getFiscalYear(new Date())}年3月〜{getFiscalYear(new Date()) + 1}年2月)</small>
+            </div>
+          </aside>
+
+          <main style={styles.main}>
+            {notification && (
+              <div style={{
+                ...styles.notification,
+                backgroundColor: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
+                color: notification.type === 'error' ? '#dc2626' : '#16a34a'
+              }}>
+                {notification.message}
+              </div>
+            )}
+
+            {currentView === 'dashboard' && (
+              <Dashboard 
+                customers={customers}
+                sales={sales}
+                monthlyReports={monthlyReports}
+              />
+            )}
+            {currentView === 'sales-input' && (
+              <SalesInput 
+                customers={customers}
+                sales={sales}
+                addSale={addSale}
+                updateSale={updateSale}
+                deleteSale={deleteSale}
+                addCustomer={addCustomer}
+                customProducts={customProducts}
+                displayCutoff={displayCutoff}
+                clearSalesHistory={clearSalesHistory}
+              />
+            )}
+            {currentView === 'customer-list' && (
+              <CustomerList 
+                customers={customers}
+                sales={sales}
+                updateCustomer={updateCustomer}
+              />
+            )}
+            {currentView === 'product-count' && (
+              <ProductCount sales={sales} />
+            )}
+            {currentView === 'monthly-report' && (
+              <MonthlyReport 
+                customers={customers}
+                sales={sales}
+                monthlyReports={monthlyReports}
+                saveMonthlyReport={saveMonthlyReport}
+              />
+            )}
+            {currentView === 'yearly-report' && (
+              <YearlyReport 
+                monthlyReports={monthlyReports}
+                customers={customers}
+                sales={sales}
+              />
+            )}
+            {currentView === 'master' && (
+              <MasterManagement 
+                customers={customers}
+                addCustomer={addCustomer}
+                updateCustomer={updateCustomer}
+                deleteCustomer={deleteCustomer}
+                importCustomersFile={importCustomersFile}
+                customProducts={customProducts}
+                addCustomProduct={addCustomProduct}
+                deleteCustomProduct={deleteCustomProduct}
+              />
+            )}
+            {currentView === 'backup' && (
+              <BackupManagement 
+                exportBackup={exportBackup}
+                importBackup={importBackup}
+              />
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    // ============================================
+    // ダッシュボード
+    // ============================================
+    function Dashboard({ customers, sales, monthlyReports }) {
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+      const fiscalYear = getFiscalYear(currentDate);
+
+      const currentMonthSales = sales.filter(s => {
+        const d = new Date(s.date);
+        return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+      });
+
+      const totalSalesAmount = currentMonthSales.reduce((sum, s) => 
+        sum + s.items.reduce((itemSum, item) => itemSum + (item.price * item.quantity), 0), 0
+      );
+
+      const fiscalYearSales = sales.filter(s => getFiscalYear(new Date(s.date)) === fiscalYear);
+      
+      let qsCount = 0;
+      let lotionCount = 0;
+      
+      fiscalYearSales.forEach(sale => {
+        sale.items.forEach(item => {
+          if (item.category === 'QS') qsCount += item.quantity;
+          if (item.category === 'L') lotionCount += item.quantity;
+        });
+      });
+
+      const rankCounts = { A: 0, B: 0, C: 0, D: 0 };
+      customers.forEach(c => {
+        if (rankCounts[c.rank] !== undefined) rankCounts[c.rank]++;
+      });
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>ダッシュボード</h1>
+          
+          <div style={styles.cardGrid}>
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardIcon}>💰</span>
+                <span>今月の売上</span>
+              </div>
+              <div style={styles.cardValue}>
+                ¥{totalSalesAmount.toLocaleString()}
+              </div>
+              <div style={styles.cardSub}>
+                {currentMonthSales.length}件の取引
+              </div>
+            </div>
+
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardIcon}>👥</span>
+                <span>総顧客数</span>
+              </div>
+              <div style={styles.cardValue}>
+                {customers.length}名
+              </div>
+              <div style={styles.cardSub}>
+                A:{rankCounts.A} B:{rankCounts.B} C:{rankCounts.C} D:{rankCounts.D}
+              </div>
+            </div>
+
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardIcon}>🧼</span>
+                <span>QS（年間目標120個）</span>
+              </div>
+              <div style={styles.cardValue}>
+                {qsCount} / 120
+              </div>
+              <div style={styles.progressBar}>
+                <div style={{
+                  ...styles.progressFill,
+                  width: `${Math.min(100, (qsCount / 120) * 100)}%`
+                }}></div>
+              </div>
+              <div style={styles.cardSub}>
+                達成率: {Math.round((qsCount / 120) * 100)}%
+              </div>
+            </div>
+
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardIcon}>💧</span>
+                <span>ローション（年間目標210個）</span>
+              </div>
+              <div style={styles.cardValue}>
+                {lotionCount} / 210
+              </div>
+              <div style={styles.progressBar}>
+                <div style={{
+                  ...styles.progressFill,
+                  width: `${Math.min(100, (lotionCount / 210) * 100)}%`,
+                  backgroundColor: '#3b82f6'
+                }}></div>
+              </div>
+              <div style={styles.cardSub}>
+                達成率: {Math.round((lotionCount / 210) * 100)}%
+              </div>
+            </div>
+          </div>
+
+          <div style={styles.section}>
+            <h2 style={styles.sectionTitle}>最近の売上（直近5件）</h2>
+            <div style={styles.tableContainer}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>日付</th>
+                    <th style={styles.th}>顧客名</th>
+                    <th style={styles.th}>商品</th>
+                    <th style={styles.th}>金額</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sales.slice(-5).reverse().map(sale => (
+                    <tr key={sale.id}>
+                      <td style={styles.td}>{sale.date}</td>
+                      <td style={styles.td}>{sale.customerName}</td>
+                      <td style={styles.td}>
+                        {sale.items.map(item => item.name).join(', ')}
+                      </td>
+                      <td style={styles.td}>
+                        ¥{sale.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                  {sales.length === 0 && (
+                    <tr>
+                      <td colSpan="4" style={{ ...styles.td, textAlign: 'center', color: '#999' }}>
+                        売上データがありません
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // 売上伝票入力
+    // ============================================
+    function SalesInput({ customers, sales, addSale, updateSale, deleteSale, addCustomer, customProducts, displayCutoff, clearSalesHistory }) {
+      const [step, setStep] = useState(1);
+      const [uploadedImage, setUploadedImage] = useState(null);
+      const [isProcessing, setIsProcessing] = useState(false);
+      const [editMode, setEditMode] = useState(false);
+      const [editingSaleId, setEditingSaleId] = useState(null);
+      const [formData, setFormData] = useState({
+        date: new Date().toISOString().split('T')[0],
+        customerName: '',
+        items: [{ name: '', quantity: 1, price: 0, code: '', category: 'other' }]
+      });
+      const [newCustomerMode, setNewCustomerMode] = useState(false);
+      const [newCustomerRank, setNewCustomerRank] = useState('C');
+
+      const fileInputRef = useRef(null);
+
+      // 表示対象の売上履歴を取得
+      const getDisplaySales = () => {
+        if (!displayCutoff) {
+          return sales.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+        return sales
+          .filter(s => new Date(s.createdAt) >= new Date(displayCutoff))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      };
+
+      const displaySales = getDisplaySales();
+
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setUploadedImage(e.target.result);
+            processImage(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const processImage = async (imageData) => {
+        setIsProcessing(true);
+        setTimeout(() => {
+          setIsProcessing(false);
+          setStep(2);
+        }, 1500);
+      };
+
+      const handleProductSelect = (index, productCode) => {
+        const product = findProductByCode(productCode, customProducts);
+        if (product) {
+          const newItems = [...formData.items];
+          newItems[index] = {
+            ...newItems[index],
+            name: product.name,
+            code: product.code,
+            price: product.price,
+            category: product.category
+          };
+          setFormData({ ...formData, items: newItems });
+        }
+      };
+
+      const addItem = () => {
+        setFormData({
+          ...formData,
+          items: [...formData.items, { name: '', quantity: 1, price: 0, code: '', category: 'other' }]
+        });
+      };
+
+      const removeItem = (index) => {
+        const newItems = formData.items.filter((_, i) => i !== index);
+        setFormData({ ...formData, items: newItems.length ? newItems : [{ name: '', quantity: 1, price: 0, code: '', category: 'other' }] });
+      };
+
+      const calculateTotal = () => {
+        return formData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      };
+
+      const handleSubmit = () => {
+        if (!formData.customerName) {
+          alert('顧客名を入力してください');
+          return;
+        }
+        if (formData.items.every(item => !item.name)) {
+          alert('商品を1つ以上入力してください');
+          return;
+        }
+
+        if (newCustomerMode) {
+          const existingCustomer = customers.find(c => c.name === formData.customerName);
+          if (!existingCustomer) {
+            addCustomer({ name: formData.customerName, rank: newCustomerRank });
+          }
+        }
+
+        if (editMode && editingSaleId) {
+          // 編集モード: 既存売上を更新
+          updateSale(editingSaleId, {
+            date: formData.date,
+            customerName: formData.customerName,
+            items: formData.items.filter(item => item.name)
+          });
+        } else {
+          // 新規登録
+          addSale({
+            date: formData.date,
+            customerName: formData.customerName,
+            items: formData.items.filter(item => item.name)
+          });
+        }
+
+        setStep(3);
+      };
+
+      const resetForm = () => {
+        setStep(1);
+        setUploadedImage(null);
+        setEditMode(false);
+        setEditingSaleId(null);
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          customerName: '',
+          items: [{ name: '', quantity: 1, price: 0, code: '', category: 'other' }]
+        });
+        setNewCustomerMode(false);
+      };
+
+      const handleEditSale = (sale) => {
+        setEditMode(true);
+        setEditingSaleId(sale.id);
+        setFormData({
+          date: sale.date,
+          customerName: sale.customerName,
+          items: sale.items.length > 0 ? sale.items : [{ name: '', quantity: 1, price: 0, code: '', category: 'other' }]
+        });
+        setNewCustomerMode(false);
+        setStep(2);
+      };
+
+      const formatDate = (dateStr) => {
+        const d = new Date(dateStr);
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+      };
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>
+            売上伝票入力
+            {editMode && <span style={styles.editModeBadge}>編集モード</span>}
+          </h1>
+
+          <div style={styles.stepIndicator}>
+            <div style={{...styles.step, ...(step >= 1 ? styles.stepActive : {})}}>
+              <span style={styles.stepNumber}>1</span>
+              <span>伝票アップロード</span>
+            </div>
+            <div style={styles.stepLine}></div>
+            <div style={{...styles.step, ...(step >= 2 ? styles.stepActive : {})}}>
+              <span style={styles.stepNumber}>2</span>
+              <span>確認・修正</span>
+            </div>
+            <div style={styles.stepLine}></div>
+            <div style={{...styles.step, ...(step >= 3 ? styles.stepActive : {})}}>
+              <span style={styles.stepNumber}>3</span>
+              <span>完了</span>
+            </div>
+          </div>
+
+          {step === 1 && (
+            <div style={styles.uploadSection}>
+              <div 
+                style={styles.uploadArea}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {isProcessing ? (
+                  <div style={styles.processing}>
+                    <div style={styles.spinner}></div>
+                    <p>画像を読み取り中...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div style={styles.uploadIcon}>📷</div>
+                    <p style={styles.uploadText}>クリックして伝票画像をアップロード</p>
+                    <p style={styles.uploadSubtext}>または画像をドラッグ＆ドロップ</p>
+                  </>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+              />
+              
+              <div style={styles.orDivider}>
+                <span>または</span>
+              </div>
+              
+              <button 
+                style={styles.manualButton}
+                onClick={() => setStep(2)}
+              >
+                手動入力で登録する
+              </button>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div style={styles.formSection}>
+              {editMode && (
+                <div style={styles.editModeHeader}>
+                  <span>📝 売上データを編集中（ID: {editingSaleId}）</span>
+                </div>
+              )}
+              <div style={{...styles.formGrid, gridTemplateColumns: uploadedImage ? '1fr 1fr' : '1fr'}}>
+                {uploadedImage && (
+                  <div style={styles.imagePreview}>
+                    <h3 style={styles.previewTitle}>伝票画像</h3>
+                    <img src={uploadedImage} alt="伝票" style={styles.previewImage} />
+                  </div>
+                )}
+                
+                <div style={styles.formPanel}>
+                  <h3 style={styles.formTitle}>{editMode ? '売上データ編集' : '伝票内容'}</h3>
+                  
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>日付</label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      style={styles.input}
+                    />
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>顧客名</label>
+                    <div style={styles.customerInputGroup}>
+                      <input
+                        type="text"
+                        list="customer-list"
+                        value={formData.customerName}
+                        onChange={(e) => {
+                          setFormData({...formData, customerName: e.target.value});
+                          const existing = customers.find(c => c.name === e.target.value);
+                          setNewCustomerMode(!existing && e.target.value.length > 0);
+                        }}
+                        placeholder="顧客名を入力"
+                        style={styles.input}
+                      />
+                      <datalist id="customer-list">
+                        {customers.map(c => (
+                          <option key={c.id} value={c.name} />
+                        ))}
+                      </datalist>
+                    </div>
+                    {newCustomerMode && (
+                      <div style={styles.newCustomerNote}>
+                        <span style={styles.newBadge}>新規顧客</span>
+                        <select 
+                          value={newCustomerRank}
+                          onChange={(e) => setNewCustomerRank(e.target.value)}
+                          style={styles.rankSelect}
+                        >
+                          <option value="A">Aランク</option>
+                          <option value="B">Bランク</option>
+                          <option value="C">Cランク</option>
+                          <option value="D">Dランク</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>商品明細</label>
+                    {formData.items.map((item, index) => (
+                      <div key={index} style={styles.itemRow}>
+                        <select
+                          value={item.code}
+                          onChange={(e) => handleProductSelect(index, e.target.value)}
+                          style={styles.productSelect}
+                        >
+                          <option value="">商品を選択...</option>
+                          {Object.entries(PRODUCT_MASTER).map(([key, category]) => {
+                            const builtInProducts = category.products;
+                            const customProds = customProducts[key] || [];
+                            const allProducts = [...builtInProducts, ...customProds];
+                            
+                            return (
+                              <optgroup key={key} label={category.name}>
+                                {allProducts.map(product => (
+                                  <option key={product.code + (product.isCustom ? '_c' : '')} value={product.code}>
+                                    {product.isCustom ? '★ ' : ''}{product.name} (¥{product.price.toLocaleString()})
+                                  </option>
+                                ))}
+                              </optgroup>
+                            );
+                          })}
+                        </select>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newItems = [...formData.items];
+                            newItems[index].quantity = parseInt(e.target.value) || 1;
+                            setFormData({...formData, items: newItems});
+                          }}
+                          style={styles.quantityInput}
+                        />
+                        <span style={styles.itemPrice}>
+                          ¥{(item.price * item.quantity).toLocaleString()}
+                        </span>
+                        <button
+                          onClick={() => removeItem(index)}
+                          style={styles.removeButton}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button onClick={addItem} style={styles.addItemButton}>
+                      ＋ 商品を追加
+                    </button>
+                  </div>
+
+                  <div style={styles.totalSection}>
+                    <span>合計金額（税抜）</span>
+                    <span style={styles.totalAmount}>¥{calculateTotal().toLocaleString()}</span>
+                  </div>
+
+                  <div style={styles.buttonGroup}>
+                    <button onClick={resetForm} style={styles.cancelButton}>
+                      キャンセル
+                    </button>
+                    <button onClick={handleSubmit} style={styles.submitButton}>
+                      {editMode ? '更新する' : '登録する'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div style={styles.completionSection}>
+              <div style={styles.completionIcon}>✅</div>
+              <h2 style={styles.completionTitle}>{editMode ? '更新完了' : '登録完了'}</h2>
+              <p style={styles.completionText}>
+                {editMode ? '売上データが更新されました。' : '売上伝票が登録されました。'}<br />
+                お客様分布リスト・製品別販売積算表に反映されています。
+              </p>
+              <button onClick={resetForm} style={styles.submitButton}>
+                続けて入力する
+              </button>
+            </div>
+          )}
+
+          {/* 売上履歴セクション */}
+          <div style={styles.historySection}>
+            <div style={styles.historyHeader}>
+              <h2 style={styles.historySectionTitle}>📋 直近の売上履歴</h2>
+              <span style={styles.historyCount}>
+                表示件数: {displaySales.length}件
+                {displayCutoff && ` （${new Date(displayCutoff).toLocaleDateString('ja-JP')}以降）`}
+              </span>
+            </div>
+            
+            {displaySales.length > 0 ? (
+              <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>日付</th>
+                      <th style={styles.th}>顧客名</th>
+                      <th style={styles.th}>商品</th>
+                      <th style={styles.th}>金額</th>
+                      <th style={{...styles.th, width: 100}}>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displaySales.map(sale => (
+                      <tr key={sale.id} style={editingSaleId === sale.id ? styles.editingRow : {}}>
+                        <td style={styles.td}>{formatDate(sale.date)}</td>
+                        <td style={styles.td}>{sale.customerName}</td>
+                        <td style={{...styles.td, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                          {sale.items.map((item, i) => (
+                            <span key={i}>
+                              {i > 0 && ', '}
+                              {item.name}{item.quantity > 1 ? `×${item.quantity}` : ''}
+                            </span>
+                          ))}
+                        </td>
+                        <td style={styles.td}>
+                          ¥{sale.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}
+                        </td>
+                        <td style={styles.td}>
+                          <div style={styles.actionButtons}>
+                            <button 
+                              onClick={() => handleEditSale(sale)}
+                              style={styles.editButton}
+                              title="編集"
+                            >
+                              ✏️
+                            </button>
+                            <button 
+                              onClick={() => deleteSale(sale.id)}
+                              style={styles.deleteButtonSmall}
+                              title="削除"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={styles.noHistory}>
+                <p>履歴データがありません</p>
+              </div>
+            )}
+
+            {/* 翌月更新セクション */}
+            <div style={styles.monthEndSection}>
+              <div style={styles.monthEndWarning}>
+                <h4>⚠️ 月末処理</h4>
+                <p>翌月の入力を始める前に「翌月更新」を押してください</p>
+                <p style={styles.monthEndNote}>※売上データは削除されません。履歴表示のみクリアされます</p>
+              </div>
+              <button onClick={clearSalesHistory} style={styles.clearHistoryButton}>
+                🔄 翌月更新（履歴をクリア）
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // お客様分布リスト（書類2）
+    // ============================================
+    function CustomerList({ customers, sales, updateCustomer }) {
+      const [selectedYear, setSelectedYear] = useState(getFiscalYear(new Date()));
+      const [searchTerm, setSearchTerm] = useState('');
+
+      const getCustomerSales = (customerName) => {
+        const customerSales = sales.filter(s => 
+          s.customerName === customerName && 
+          getFiscalYear(new Date(s.date)) === selectedYear
+        );
+
+        const monthlyPurchases = {};
+        FISCAL_MONTHS.forEach(m => monthlyPurchases[m] = []);
+
+        const categoryCounts = { QS: 0, L: 0, P: 0, ES: 0, other: 0 };
+        let totalAmount = 0;
+
+        customerSales.forEach(sale => {
+          const month = new Date(sale.date).getMonth() + 1;
+          sale.items.forEach(item => {
+            if (monthlyPurchases[month]) {
+              const abbrev = item.category || 'other';
+              monthlyPurchases[month].push(abbrev);
+            }
+            if (categoryCounts[item.category] !== undefined) {
+              categoryCounts[item.category] += item.quantity;
+            } else {
+              categoryCounts.other += item.quantity;
+            }
+            totalAmount += item.price * item.quantity;
+          });
+        });
+
+        return {
+          monthlyPurchases,
+          categoryCounts,
+          totalAmount,
+          monthlyAverage: customerSales.length > 0 ? Math.round(totalAmount / 12) : 0
+        };
+      };
+
+      const filteredCustomers = customers.filter(c => 
+        c.name.includes(searchTerm) || c.rank.includes(searchTerm)
+      );
+
+      const handlePrint = () => {
+        const rows = filteredCustomers.map((customer, index) => {
+          const salesData = getCustomerSales(customer.name);
+          return `
+            <tr>
+              <td class="text-center">${index + 1}</td>
+              <td class="text-center">${customer.rank}</td>
+              <td>${customer.name}</td>
+              <td class="text-right">¥${salesData.totalAmount.toLocaleString()}</td>
+              <td class="text-right">¥${salesData.monthlyAverage.toLocaleString()}</td>
+              <td class="text-center">${salesData.categoryCounts.QS || '-'}</td>
+              <td class="text-center">${salesData.categoryCounts.L || '-'}</td>
+              <td class="text-center">${salesData.categoryCounts.P || '-'}</td>
+              <td class="text-center">${salesData.categoryCounts.ES || '-'}</td>
+              ${FISCAL_MONTHS.map(month => 
+                `<td class="text-center" style="font-size:7pt;">${salesData.monthlyPurchases[month]?.join(',') || '-'}</td>`
+              ).join('')}
+            </tr>
+          `;
+        }).join('');
+
+        const content = `
+          <div class="print-header">
+            <h1>お客様分布リスト（書類2）</h1>
+            <div class="subtitle">${selectedYear}年度（${selectedYear}年3月〜${selectedYear + 1}年2月）　出力日: ${new Date().toLocaleDateString('ja-JP')}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:30px;">No</th>
+                <th style="width:35px;">ランク</th>
+                <th style="min-width:80px;">お客様名</th>
+                <th style="width:80px;">年間購入</th>
+                <th style="width:65px;">月平均</th>
+                <th style="width:30px;">QS</th>
+                <th style="width:30px;">L</th>
+                <th style="width:30px;">P</th>
+                <th style="width:30px;">ES</th>
+                ${FISCAL_MONTHS.map(m => `<th style="width:45px;">${m}月</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        `;
+        printDocument(content, 'お客様分布リスト', 'landscape');
+      };
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>お客様分布リスト（書類2）</h1>
+
+          <div style={styles.filterBar}>
+            <div style={styles.filterGroup}>
+              <label>年度:</label>
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                style={styles.filterSelect}
+              >
+                {[2024, 2025, 2026, 2027].map(year => (
+                  <option key={year} value={year}>{year}年度</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.filterGroup}>
+              <input
+                type="text"
+                placeholder="顧客名・ランクで検索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={styles.searchInput}
+              />
+            </div>
+            <button onClick={handlePrint} style={styles.printButton}>
+              📄 PDF出力（横）
+            </button>
+          </div>
+
+          <div style={styles.wideTableContainer}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={{...styles.th, position: 'sticky', left: 0, backgroundColor: '#f8f9fa', zIndex: 1}}>No</th>
+                  <th style={{...styles.th, position: 'sticky', left: 40, backgroundColor: '#f8f9fa', zIndex: 1}}>ランク</th>
+                  <th style={{...styles.th, position: 'sticky', left: 90, backgroundColor: '#f8f9fa', zIndex: 1, minWidth: 100}}>お客様名</th>
+                  <th style={styles.th}>年間購入金額</th>
+                  <th style={styles.th}>月平均</th>
+                  <th style={styles.th}>QS</th>
+                  <th style={styles.th}>L</th>
+                  <th style={styles.th}>P</th>
+                  <th style={styles.th}>ES</th>
+                  {FISCAL_MONTHS.map(month => (
+                    <th key={month} style={styles.th}>{month}月</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCustomers.map((customer, index) => {
+                  const salesData = getCustomerSales(customer.name);
+                  return (
+                    <tr key={customer.id}>
+                      <td style={{...styles.td, position: 'sticky', left: 0, backgroundColor: '#fff', zIndex: 1}}>{index + 1}</td>
+                      <td style={{...styles.td, position: 'sticky', left: 40, backgroundColor: '#fff', zIndex: 1}}>
+                        <select
+                          value={customer.rank}
+                          onChange={(e) => updateCustomer(customer.id, { rank: e.target.value })}
+                          style={styles.inlineSelect}
+                        >
+                          <option value="A">A</option>
+                          <option value="B">B</option>
+                          <option value="C">C</option>
+                          <option value="D">D</option>
+                        </select>
+                      </td>
+                      <td style={{...styles.td, position: 'sticky', left: 90, backgroundColor: '#fff', zIndex: 1}}>{customer.name}</td>
+                      <td style={styles.td}>¥{salesData.totalAmount.toLocaleString()}</td>
+                      <td style={styles.td}>¥{salesData.monthlyAverage.toLocaleString()}</td>
+                      <td style={styles.td}>{salesData.categoryCounts.QS || '-'}</td>
+                      <td style={styles.td}>{salesData.categoryCounts.L || '-'}</td>
+                      <td style={styles.td}>{salesData.categoryCounts.P || '-'}</td>
+                      <td style={styles.td}>{salesData.categoryCounts.ES || '-'}</td>
+                      {FISCAL_MONTHS.map(month => (
+                        <td key={month} style={{...styles.td, fontSize: 11, maxWidth: 80}}>
+                          {salesData.monthlyPurchases[month]?.join(',') || '-'}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // 製品別販売積算表（書類4）
+    // ============================================
+    function ProductCount({ sales }) {
+      const [selectedYear, setSelectedYear] = useState(getFiscalYear(new Date()));
+      const [selectedCategory, setSelectedCategory] = useState('QS');
+
+      const categories = {
+        QS: { name: 'クイーンシルバー（せっけん）', target: 120 },
+        L: { name: 'ローション', target: 210 }
+      };
+
+      const getPurchasers = () => {
+        const purchasers = [];
+        const yearSales = sales.filter(s => getFiscalYear(new Date(s.date)) === selectedYear);
+
+        yearSales.forEach(sale => {
+          sale.items.forEach(item => {
+            if (item.category === selectedCategory) {
+              for (let i = 0; i < item.quantity; i++) {
+                purchasers.push({
+                  name: sale.customerName,
+                  date: sale.date,
+                  product: item.name
+                });
+              }
+            }
+          });
+        });
+
+        return purchasers;
+      };
+
+      const purchasers = getPurchasers();
+      const target = categories[selectedCategory]?.target || 100;
+      const progress = Math.min(100, (purchasers.length / target) * 100);
+
+      const gridSize = target;
+      const grid = Array.from({ length: gridSize }, (_, i) => purchasers[i] || null);
+
+      const handlePrint = () => {
+        const gridCells = grid.map((purchaser, index) => `
+          <div class="count-cell ${purchaser ? 'filled' : ''}">
+            <div class="num">${index + 1}</div>
+            ${purchaser ? `<div class="name">${purchaser.name}</div>` : ''}
+          </div>
+        `).join('');
+
+        const content = `
+          <div class="print-header">
+            <h1>製品別販売積算表（書類4）</h1>
+            <div class="subtitle">${selectedYear}年度（${selectedYear}年3月〜${selectedYear + 1}年2月）　出力日: ${new Date().toLocaleDateString('ja-JP')}</div>
+          </div>
+          <div class="section">
+            <div class="section-title">${categories[selectedCategory]?.name}</div>
+            <div class="summary-grid" style="grid-template-columns: repeat(3, 1fr);">
+              <div class="summary-item">
+                <div class="label">目標</div>
+                <div class="value">${target}個</div>
+              </div>
+              <div class="summary-item">
+                <div class="label">実績</div>
+                <div class="value">${purchasers.length}個</div>
+              </div>
+              <div class="summary-item">
+                <div class="label">達成率</div>
+                <div class="value">${Math.round(progress)}%</div>
+              </div>
+            </div>
+          </div>
+          <div class="count-grid">
+            ${gridCells}
+          </div>
+        `;
+        printDocument(content, '製品別販売積算表', 'portrait');
+      };
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>製品別販売積算表（書類4）</h1>
+
+          <div style={styles.filterBar}>
+            <div style={styles.filterGroup}>
+              <label>年度:</label>
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                style={styles.filterSelect}
+              >
+                {[2024, 2025, 2026, 2027].map(year => (
+                  <option key={year} value={year}>{year}年度</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.filterGroup}>
+              <label>製品:</label>
+              <select 
+                value={selectedCategory} 
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={styles.filterSelect}
+              >
+                <option value="QS">クイーンシルバー（目標120個）</option>
+                <option value="L">ローション（目標210個）</option>
+              </select>
+            </div>
+            <button onClick={handlePrint} style={styles.printButton}>
+              📄 PDF出力（縦）
+            </button>
+          </div>
+
+          <div style={styles.progressSection}>
+            <div style={styles.progressHeader}>
+              <span style={styles.progressTitle}>{categories[selectedCategory]?.name}</span>
+              <span style={styles.progressCount}>{purchasers.length} / {target}個</span>
+            </div>
+            <div style={styles.largeProgressBar}>
+              <div style={{
+                ...styles.progressFill,
+                width: `${progress}%`,
+                backgroundColor: selectedCategory === 'QS' ? '#10b981' : '#3b82f6'
+              }}></div>
+            </div>
+            <div style={styles.progressPercent}>達成率: {Math.round(progress)}%</div>
+          </div>
+
+          <div style={styles.countGrid}>
+            {grid.map((purchaser, index) => (
+              <div 
+                key={index} 
+                style={{
+                  ...styles.countCell,
+                  backgroundColor: purchaser ? (selectedCategory === 'QS' ? '#dcfce7' : '#dbeafe') : '#f9fafb',
+                  borderColor: purchaser ? (selectedCategory === 'QS' ? '#10b981' : '#3b82f6') : '#e5e7eb'
+                }}
+                title={purchaser ? `${purchaser.name} (${purchaser.date})` : ''}
+              >
+                <span style={styles.cellNumber}>{index + 1}</span>
+                {purchaser && (
+                  <span style={styles.cellName}>{purchaser.name}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // 月末レポート入力（書類1）
+    // ============================================
+    function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) {
+      const currentDate = new Date();
+      const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+      const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
+
+      const existingReport = monthlyReports.find(
+        r => r.year === selectedYear && r.month === selectedMonth
+      );
+
+      const [report, setReport] = useState(existingReport || {
+        year: selectedYear,
+        month: selectedMonth,
+        targetSales: 0,
+        resultSales: 0,
+        actions: {
+          newCustomer: { target: 0, result: 0, amount: 0 },
+          priceUp: { target: 0, result: 0, amount: 0 },
+          jp: { target: 0, result: 0, amount: 0 },
+          sample: { target: 0, result: 0 },
+          monitor: { target: 0, result: 0 },
+          expansion: { target: 0, result: 0 },
+          repeat: { target: 0, result: 0 },
+        },
+        afterFollow: { total: 0, done: 0 },
+        metCount: 0,
+        threeStepSales: { qs: 0, pack: 0, lotion: 0 },
+        purchase: 0,
+        selfUse: 0
+      });
+
+      useEffect(() => {
+        const existing = monthlyReports.find(
+          r => r.year === selectedYear && r.month === selectedMonth
+        );
+        if (existing) {
+          setReport(existing);
+        } else {
+          setReport({
+            year: selectedYear,
+            month: selectedMonth,
+            targetSales: 0,
+            resultSales: 0,
+            actions: {
+              newCustomer: { target: 0, result: 0, amount: 0 },
+              priceUp: { target: 0, result: 0, amount: 0 },
+              jp: { target: 0, result: 0, amount: 0 },
+              sample: { target: 0, result: 0 },
+              monitor: { target: 0, result: 0 },
+              expansion: { target: 0, result: 0 },
+              repeat: { target: 0, result: 0 },
+            },
+            afterFollow: { total: 0, done: 0 },
+            metCount: 0,
+            threeStepSales: { qs: 0, pack: 0, lotion: 0 },
+            purchase: 0,
+            selfUse: 0
+          });
+        }
+      }, [selectedYear, selectedMonth, monthlyReports]);
+
+      const autoCalculate = () => {
+        const monthSales = sales.filter(s => {
+          const d = new Date(s.date);
+          return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth;
+        });
+
+        let totalSales = 0;
+        let qsCount = 0, packCount = 0, lotionCount = 0;
+
+        monthSales.forEach(sale => {
+          sale.items.forEach(item => {
+            totalSales += item.price * item.quantity;
+            if (item.category === 'QS') qsCount += item.quantity;
+            if (item.category === 'P') packCount += item.quantity;
+            if (item.category === 'L') lotionCount += item.quantity;
+          });
+        });
+
+        setReport({
+          ...report,
+          resultSales: totalSales,
+          threeStepSales: { qs: qsCount, pack: packCount, lotion: lotionCount }
+        });
+      };
+
+      const handleSave = () => {
+        saveMonthlyReport({
+          ...report,
+          year: selectedYear,
+          month: selectedMonth
+        });
+      };
+
+      const handlePrint = () => {
+        const content = `
+          <div class="print-header">
+            <h1>月末レポート・気づき（書類1）</h1>
+            <div class="subtitle">${selectedYear}年${selectedMonth}月　出力日: ${new Date().toLocaleDateString('ja-JP')}</div>
+          </div>
+          
+          <div class="section">
+            <div class="section-title">☆今月の目標実売</div>
+            <table>
+              <tbody>
+                <tr>
+                  <th style="width:80px;">目標</th>
+                  <td style="width:120px;">¥${(report.targetSales || 0).toLocaleString()}</td>
+                  <th style="width:80px;">結果</th>
+                  <td style="width:120px;">¥${(report.resultSales || 0).toLocaleString()}</td>
+                  <th style="width:80px;">達成率</th>
+                  <td style="width:80px;">${report.targetSales ? Math.round((report.resultSales / report.targetSales) * 100) : 0}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="section-title">☆顧客ランク別集計</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>総ユーザー数</th>
+                  <th>Aランク人数</th>
+                  <th>Aランク売上</th>
+                  <th>Bランク人数</th>
+                  <th>Bランク売上</th>
+                  <th>Cランク人数</th>
+                  <th>Cランク売上</th>
+                  <th>Dランク人数</th>
+                  <th>Dランク売上</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-center">${customers.length}名</td>
+                  <td class="text-center">${rankSummary.A.count}名</td>
+                  <td class="text-right">¥${rankSummary.A.amount.toLocaleString()}</td>
+                  <td class="text-center">${rankSummary.B.count}名</td>
+                  <td class="text-right">¥${rankSummary.B.amount.toLocaleString()}</td>
+                  <td class="text-center">${rankSummary.C.count}名</td>
+                  <td class="text-right">¥${rankSummary.C.amount.toLocaleString()}</td>
+                  <td class="text-center">${rankSummary.D.count}名</td>
+                  <td class="text-right">¥${rankSummary.D.amount.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="section-title">※3ステップ実売数</div>
+            <table>
+              <tbody>
+                <tr>
+                  <th style="width:120px;">QS（せっけん）</th>
+                  <td style="width:80px;" class="text-center">${report.threeStepSales?.qs || 0}個</td>
+                  <th style="width:80px;">パック</th>
+                  <td style="width:80px;" class="text-center">${report.threeStepSales?.pack || 0}本</td>
+                  <th style="width:100px;">ローション</th>
+                  <td style="width:80px;" class="text-center">${report.threeStepSales?.lotion || 0}本</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="section-title">☆仕入れ・使用金額</div>
+            <table>
+              <tbody>
+                <tr>
+                  <th style="width:120px;">仕入れ</th>
+                  <td style="width:150px;" class="text-right">¥${(report.purchase || 0).toLocaleString()}</td>
+                  <th style="width:140px;">自分の使用金額</th>
+                  <td style="width:150px;" class="text-right">¥${(report.selfUse || 0).toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+        printDocument(content, '月末レポート', 'portrait');
+      };
+
+      // ランク別集計を計算
+      const getRankSummary = () => {
+        const monthSales = sales.filter(s => {
+          const d = new Date(s.date);
+          return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth;
+        });
+
+        const rankData = { A: { count: 0, amount: 0 }, B: { count: 0, amount: 0 }, C: { count: 0, amount: 0 }, D: { count: 0, amount: 0 } };
+        const customerSet = { A: new Set(), B: new Set(), C: new Set(), D: new Set() };
+
+        monthSales.forEach(sale => {
+          const customer = customers.find(c => c.name === sale.customerName);
+          const rank = customer?.rank || 'C';
+          sale.items.forEach(item => {
+            if (rankData[rank]) {
+              rankData[rank].amount += item.price * item.quantity;
+              customerSet[rank].add(sale.customerName);
+            }
+          });
+        });
+
+        Object.keys(rankData).forEach(rank => {
+          rankData[rank].count = customerSet[rank].size;
+        });
+
+        return rankData;
+      };
+
+      const rankSummary = getRankSummary();
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>月末レポート・気づき（書類1）</h1>
+
+          <div style={styles.filterBar}>
+            <div style={styles.filterGroup}>
+              <label>年:</label>
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                style={styles.filterSelect}
+              >
+                {[2024, 2025, 2026, 2027].map(year => (
+                  <option key={year} value={year}>{year}年</option>
+                ))}
+              </select>
+            </div>
+            <div style={styles.filterGroup}>
+              <label>月:</label>
+              <select 
+                value={selectedMonth} 
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                style={styles.filterSelect}
+              >
+                {FISCAL_MONTHS.map(month => (
+                  <option key={month} value={month}>{month}月</option>
+                ))}
+              </select>
+            </div>
+            <button onClick={autoCalculate} style={styles.autoCalcButton}>
+              売上データから自動集計
+            </button>
+            <button onClick={handlePrint} style={styles.printButton}>
+              📄 PDF出力（縦）
+            </button>
+          </div>
+
+          <div style={styles.reportForm}>
+            <div style={styles.reportSection}>
+              <h3 style={styles.reportSectionTitle}>☆今月の目標実売</h3>
+              <div style={styles.reportRow}>
+                <label>目標:</label>
+                <input
+                  type="number"
+                  value={report.targetSales}
+                  onChange={(e) => setReport({...report, targetSales: parseInt(e.target.value) || 0})}
+                  style={styles.reportInput}
+                />
+                <span>円</span>
+                <label style={{marginLeft: 20}}>結果:</label>
+                <input
+                  type="number"
+                  value={report.resultSales}
+                  onChange={(e) => setReport({...report, resultSales: parseInt(e.target.value) || 0})}
+                  style={styles.reportInput}
+                />
+                <span>円</span>
+              </div>
+            </div>
+
+            <div style={styles.reportSection}>
+              <h3 style={styles.reportSectionTitle}>※3ステップ実売数</h3>
+              <div style={styles.reportRow}>
+                <span>QS</span>
+                <input
+                  type="number"
+                  value={report.threeStepSales?.qs || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    threeStepSales: { ...report.threeStepSales, qs: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>個 ・ パック</span>
+                <input
+                  type="number"
+                  value={report.threeStepSales?.pack || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    threeStepSales: { ...report.threeStepSales, pack: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>本 ・ ローション</span>
+                <input
+                  type="number"
+                  value={report.threeStepSales?.lotion || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    threeStepSales: { ...report.threeStepSales, lotion: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>本</span>
+              </div>
+            </div>
+
+            <div style={styles.reportSection}>
+              <div style={styles.reportRow}>
+                <span>仕入れ:</span>
+                <input
+                  type="number"
+                  value={report.purchase || 0}
+                  onChange={(e) => setReport({...report, purchase: parseInt(e.target.value) || 0})}
+                  style={styles.reportInput}
+                />
+                <span>円</span>
+                <span style={{marginLeft: 20}}>自分の使用金額:</span>
+                <input
+                  type="number"
+                  value={report.selfUse || 0}
+                  onChange={(e) => setReport({...report, selfUse: parseInt(e.target.value) || 0})}
+                  style={styles.reportInput}
+                />
+                <span>円</span>
+              </div>
+            </div>
+
+            <button onClick={handleSave} style={styles.submitButton}>
+              レポートを保存
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // 年間ABC報告（書類3）
+    // ============================================
+    function YearlyReport({ monthlyReports, customers, sales }) {
+      const [selectedYear, setSelectedYear] = useState(getFiscalYear(new Date()));
+
+      const getYearlyData = () => {
+        const data = [];
+        
+        FISCAL_MONTHS.forEach(month => {
+          const year = month >= 3 ? selectedYear : selectedYear + 1;
+          const report = monthlyReports.find(r => r.year === year && r.month === month);
+          
+          const monthSales = sales.filter(s => {
+            const d = new Date(s.date);
+            return d.getFullYear() === year && d.getMonth() + 1 === month;
+          });
+
+          const rankData = { A: { count: 0, amount: 0 }, B: { count: 0, amount: 0 }, C: { count: 0, amount: 0 }, D: { count: 0, amount: 0 } };
+          const customerSet = { A: new Set(), B: new Set(), C: new Set(), D: new Set() };
+
+          monthSales.forEach(sale => {
+            const customer = customers.find(c => c.name === sale.customerName);
+            const rank = customer?.rank || 'C';
+            sale.items.forEach(item => {
+              if (rankData[rank]) {
+                rankData[rank].amount += item.price * item.quantity;
+                customerSet[rank].add(sale.customerName);
+              }
+            });
+          });
+
+          Object.keys(rankData).forEach(rank => {
+            rankData[rank].count = customerSet[rank].size;
+          });
+
+          data.push({
+            month,
+            year,
+            report,
+            rankData,
+            totalCustomers: customers.length,
+            totalSales: Object.values(rankData).reduce((sum, r) => sum + r.amount, 0)
+          });
+        });
+
+        return data;
+      };
+
+      const yearlyData = getYearlyData();
+
+      const handlePrint = () => {
+        const rows = yearlyData.map(data => `
+          <tr>
+            <td class="text-center">${data.month}月</td>
+            <td class="text-center">${data.totalCustomers}</td>
+            <td class="text-center">${data.rankData.A.count}</td>
+            <td class="text-right">¥${data.rankData.A.amount.toLocaleString()}</td>
+            <td class="text-center">${data.rankData.B.count}</td>
+            <td class="text-right">¥${data.rankData.B.amount.toLocaleString()}</td>
+            <td class="text-center">${data.rankData.C.count}</td>
+            <td class="text-right">¥${data.rankData.C.amount.toLocaleString()}</td>
+            <td class="text-center">${data.rankData.D.count}</td>
+            <td class="text-right">¥${data.rankData.D.amount.toLocaleString()}</td>
+            <td class="text-right">¥${data.totalSales.toLocaleString()}</td>
+            <td class="text-right">¥${(data.report?.purchase || 0).toLocaleString()}</td>
+            <td class="text-right">¥${(data.report?.selfUse || 0).toLocaleString()}</td>
+          </tr>
+        `).join('');
+
+        const content = `
+          <div class="print-header">
+            <h1>${selectedYear}年度 ABC報告（書類3）</h1>
+            <div class="subtitle">${selectedYear}年3月〜${selectedYear + 1}年2月　出力日: ${new Date().toLocaleDateString('ja-JP')}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2" style="width:45px;">月</th>
+                <th rowspan="2" style="width:45px;">総数</th>
+                <th colspan="2">Aランク</th>
+                <th colspan="2">Bランク</th>
+                <th colspan="2">Cランク</th>
+                <th colspan="2">Dランク</th>
+                <th rowspan="2" style="width:80px;">実売</th>
+                <th rowspan="2" style="width:80px;">仕入れ</th>
+                <th rowspan="2" style="width:80px;">使用金額</th>
+              </tr>
+              <tr>
+                <th style="width:35px;">人</th>
+                <th style="width:70px;">金額</th>
+                <th style="width:35px;">人</th>
+                <th style="width:70px;">金額</th>
+                <th style="width:35px;">人</th>
+                <th style="width:70px;">金額</th>
+                <th style="width:35px;">人</th>
+                <th style="width:70px;">金額</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        `;
+        printDocument(content, '年間ABC報告', 'landscape');
+      };
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>{selectedYear}年度 ABC報告（書類3）</h1>
+
+          <div style={styles.filterBar}>
+            <div style={styles.filterGroup}>
+              <label>年度:</label>
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                style={styles.filterSelect}
+              >
+                {[2024, 2025, 2026, 2027].map(year => (
+                  <option key={year} value={year}>{year}年度</option>
+                ))}
+              </select>
+            </div>
+            <button onClick={handlePrint} style={styles.printButton}>
+              📄 PDF出力（横）
+            </button>
+          </div>
+
+          <div style={styles.wideTableContainer}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>月</th>
+                  <th style={styles.th}>総数</th>
+                  <th style={styles.th} colSpan="2">Aランク</th>
+                  <th style={styles.th} colSpan="2">Bランク</th>
+                  <th style={styles.th} colSpan="2">Cランク</th>
+                  <th style={styles.th} colSpan="2">Dランク</th>
+                  <th style={styles.th}>実売</th>
+                  <th style={styles.th}>仕入れ</th>
+                  <th style={styles.th}>使用金額</th>
+                </tr>
+                <tr>
+                  <th style={styles.thSub}></th>
+                  <th style={styles.thSub}></th>
+                  <th style={styles.thSub}>人</th>
+                  <th style={styles.thSub}>金額</th>
+                  <th style={styles.thSub}>人</th>
+                  <th style={styles.thSub}>金額</th>
+                  <th style={styles.thSub}>人</th>
+                  <th style={styles.thSub}>金額</th>
+                  <th style={styles.thSub}>人</th>
+                  <th style={styles.thSub}>金額</th>
+                  <th style={styles.thSub}></th>
+                  <th style={styles.thSub}></th>
+                  <th style={styles.thSub}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {yearlyData.map((data, index) => (
+                  <tr key={index}>
+                    <td style={styles.td}>{data.month}月</td>
+                    <td style={styles.td}>{data.totalCustomers}</td>
+                    <td style={styles.td}>{data.rankData.A.count}</td>
+                    <td style={styles.td}>{data.rankData.A.amount.toLocaleString()}</td>
+                    <td style={styles.td}>{data.rankData.B.count}</td>
+                    <td style={styles.td}>{data.rankData.B.amount.toLocaleString()}</td>
+                    <td style={styles.td}>{data.rankData.C.count}</td>
+                    <td style={styles.td}>{data.rankData.C.amount.toLocaleString()}</td>
+                    <td style={styles.td}>{data.rankData.D.count}</td>
+                    <td style={styles.td}>{data.rankData.D.amount.toLocaleString()}</td>
+                    <td style={styles.td}>{data.totalSales.toLocaleString()}</td>
+                    <td style={styles.td}>{data.report?.purchase?.toLocaleString() || 0}</td>
+                    <td style={styles.td}>{data.report?.selfUse?.toLocaleString() || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // マスタ管理
+    // ============================================
+    function MasterManagement({ customers, addCustomer, updateCustomer, deleteCustomer, importCustomersFile, customProducts, addCustomProduct, deleteCustomProduct }) {
+      const [activeTab, setActiveTab] = useState('customers');
+      const [newCustomer, setNewCustomer] = useState({ name: '', rank: 'C' });
+      const [newProduct, setNewProduct] = useState({
+        categoryKey: 'skincare',
+        code: '',
+        name: '',
+        price: '',
+        category: 'other'
+      });
+      const fileInputRef = useRef(null);
+
+      // カテゴリ別の略称選択肢
+      const categoryAbbrevOptions = {
+        skincare: ['QS', 'L', 'P', 'ES', 'other'],
+        baseMakeup: ['SP', 'MO', 'other'],
+        hairBodyCare: ['other'],
+        healthcare: ['酵素', 'other']
+      };
+
+      const handleAddCustomer = () => {
+        if (!newCustomer.name) {
+          alert('顧客名を入力してください');
+          return;
+        }
+        addCustomer(newCustomer);
+        setNewCustomer({ name: '', rank: 'C' });
+      };
+
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          importCustomersFile(file);
+        }
+      };
+
+      const handleAddProduct = () => {
+        if (!newProduct.code) {
+          alert('商品コードを入力してください');
+          return;
+        }
+        if (!newProduct.name) {
+          alert('商品名を入力してください');
+          return;
+        }
+        if (!newProduct.price || isNaN(parseInt(newProduct.price))) {
+          alert('価格を正しく入力してください');
+          return;
+        }
+
+        const success = addCustomProduct(newProduct.categoryKey, {
+          code: newProduct.code,
+          name: newProduct.name,
+          price: parseInt(newProduct.price),
+          category: newProduct.category
+        });
+
+        if (success) {
+          setNewProduct({
+            categoryKey: newProduct.categoryKey,
+            code: '',
+            name: '',
+            price: '',
+            category: 'other'
+          });
+        }
+      };
+
+      const handleCategoryKeyChange = (categoryKey) => {
+        const defaultCategory = categoryAbbrevOptions[categoryKey]?.[categoryAbbrevOptions[categoryKey].length - 1] || 'other';
+        setNewProduct({
+          ...newProduct,
+          categoryKey,
+          category: defaultCategory
+        });
+      };
+
+      // 組み込み製品とカスタム製品を統合して表示用リストを作成
+      const getCombinedProducts = (categoryKey) => {
+        const builtIn = PRODUCT_MASTER[categoryKey]?.products.map(p => ({ ...p, isCustom: false })) || [];
+        const custom = customProducts[categoryKey]?.map(p => ({ ...p, isCustom: true })) || [];
+        return [...builtIn, ...custom];
+      };
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>マスタ管理</h1>
+
+          <div style={styles.tabs}>
+            <button 
+              style={{...styles.tab, ...(activeTab === 'customers' ? styles.tabActive : {})}}
+              onClick={() => setActiveTab('customers')}
+            >
+              顧客マスタ
+            </button>
+            <button 
+              style={{...styles.tab, ...(activeTab === 'products' ? styles.tabActive : {})}}
+              onClick={() => setActiveTab('products')}
+            >
+              製品マスタ
+            </button>
+          </div>
+
+          {activeTab === 'customers' && (
+            <div>
+              <div style={styles.addForm}>
+                <h3>顧客追加</h3>
+                <div style={styles.addFormRow}>
+                  <input
+                    type="text"
+                    placeholder="顧客名"
+                    value={newCustomer.name}
+                    onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
+                    style={styles.input}
+                  />
+                  <select
+                    value={newCustomer.rank}
+                    onChange={(e) => setNewCustomer({...newCustomer, rank: e.target.value})}
+                    style={styles.rankSelect}
+                  >
+                    <option value="A">Aランク</option>
+                    <option value="B">Bランク</option>
+                    <option value="C">Cランク</option>
+                    <option value="D">Dランク</option>
+                  </select>
+                  <button onClick={handleAddCustomer} style={styles.addButton}>追加</button>
+                </div>
+                <div style={styles.csvImport}>
+                  <button 
+                    onClick={() => fileInputRef.current?.click()} 
+                    style={styles.importButton}
+                  >
+                    Excel/CSVインポート
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <span style={styles.csvNote}>形式: 1列目=顧客名, 2列目=ランク（A/B/C/D）</span>
+                </div>
+              </div>
+
+              <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>No</th>
+                      <th style={styles.th}>顧客名</th>
+                      <th style={styles.th}>ランク</th>
+                      <th style={styles.th}>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customers.map((customer, index) => (
+                      <tr key={customer.id}>
+                        <td style={styles.td}>{index + 1}</td>
+                        <td style={styles.td}>{customer.name}</td>
+                        <td style={styles.td}>
+                          <select
+                            value={customer.rank}
+                            onChange={(e) => updateCustomer(customer.id, { rank: e.target.value })}
+                            style={styles.inlineSelect}
+                          >
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                          </select>
+                        </td>
+                        <td style={styles.td}>
+                          <button
+                            onClick={() => deleteCustomer(customer.id)}
+                            style={styles.deleteButton}
+                          >
+                            削除
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'products' && (
+            <div>
+              <div style={styles.addForm}>
+                <h3>製品追加</h3>
+                <div style={styles.productAddFormRow}>
+                  <div style={styles.productFormGroup}>
+                    <label style={styles.smallLabel}>カテゴリ</label>
+                    <select
+                      value={newProduct.categoryKey}
+                      onChange={(e) => handleCategoryKeyChange(e.target.value)}
+                      style={styles.filterSelect}
+                    >
+                      <option value="skincare">スキンケア</option>
+                      <option value="baseMakeup">ベースメイクアップ</option>
+                      <option value="hairBodyCare">ヘアケア&ボディケア</option>
+                      <option value="healthcare">ヘルスケア</option>
+                    </select>
+                  </div>
+                  <div style={styles.productFormGroup}>
+                    <label style={styles.smallLabel}>商品コード</label>
+                    <input
+                      type="text"
+                      placeholder="例: 999001"
+                      value={newProduct.code}
+                      onChange={(e) => setNewProduct({...newProduct, code: e.target.value})}
+                      style={{...styles.input, width: 120}}
+                    />
+                  </div>
+                  <div style={styles.productFormGroup}>
+                    <label style={styles.smallLabel}>価格（税抜）</label>
+                    <input
+                      type="number"
+                      placeholder="例: 5000"
+                      value={newProduct.price}
+                      onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                      style={{...styles.input, width: 100}}
+                    />
+                  </div>
+                </div>
+                <div style={{...styles.productAddFormRow, marginTop: 10}}>
+                  <div style={{...styles.productFormGroup, flex: 1}}>
+                    <label style={styles.smallLabel}>商品名</label>
+                    <input
+                      type="text"
+                      placeholder="商品名を入力"
+                      value={newProduct.name}
+                      onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                      style={styles.input}
+                    />
+                  </div>
+                  <div style={styles.productFormGroup}>
+                    <label style={styles.smallLabel}>略称</label>
+                    <select
+                      value={newProduct.category}
+                      onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                      style={styles.filterSelect}
+                    >
+                      {categoryAbbrevOptions[newProduct.categoryKey]?.map(abbrev => (
+                        <option key={abbrev} value={abbrev}>
+                          {CATEGORY_ABBREV[abbrev] || abbrev}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{...styles.productFormGroup, alignSelf: 'flex-end'}}>
+                    <button onClick={handleAddProduct} style={styles.addButton}>追加</button>
+                  </div>
+                </div>
+              </div>
+
+              {Object.entries(PRODUCT_MASTER).map(([key, category]) => {
+                const combinedProducts = getCombinedProducts(key);
+                const customCount = customProducts[key]?.length || 0;
+                
+                return (
+                  <div key={key} style={styles.productCategory}>
+                    <h3 style={styles.productCategoryTitle}>
+                      {category.name}（税率{category.taxRate}%）
+                      {customCount > 0 && (
+                        <span style={styles.customCountBadge}>+{customCount}件追加</span>
+                      )}
+                    </h3>
+                    <div style={styles.tableContainer}>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr>
+                            <th style={styles.th}>商品コード</th>
+                            <th style={styles.th}>商品名</th>
+                            <th style={styles.th}>価格</th>
+                            <th style={styles.th}>略称</th>
+                            <th style={{...styles.th, width: 60}}>操作</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {combinedProducts.map(product => (
+                            <tr key={product.code + (product.isCustom ? '_custom' : '')}>
+                              <td style={styles.td}>{product.code}</td>
+                              <td style={styles.td}>
+                                {product.isCustom && <span style={styles.customBadge}>★</span>}
+                                {product.name}
+                              </td>
+                              <td style={styles.td}>¥{product.price.toLocaleString()}</td>
+                              <td style={styles.td}>{CATEGORY_ABBREV[product.category] || product.category}</td>
+                              <td style={styles.td}>
+                                {product.isCustom ? (
+                                  <button
+                                    onClick={() => deleteCustomProduct(key, product.id)}
+                                    style={styles.deleteButton}
+                                  >
+                                    削除
+                                  </button>
+                                ) : (
+                                  <span style={styles.builtInLabel}>組込</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ============================================
+    // データ管理（バックアップ）
+    // ============================================
+    function BackupManagement({ exportBackup, importBackup }) {
+      const fileInputRef = useRef(null);
+
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (confirm('現在のデータを上書きしてバックアップを復元しますか？')) {
+            importBackup(file);
+          }
+        }
+      };
+
+      return (
+        <div style={styles.viewContainer}>
+          <h1 style={styles.viewTitle}>データ管理</h1>
+
+          <div style={styles.backupSection}>
+            <div style={styles.backupCard}>
+              <div style={styles.backupIcon}>💾</div>
+              <h3>バックアップ作成</h3>
+              <p>現在のデータをJSONファイルとしてダウンロードします。</p>
+              <button onClick={exportBackup} style={styles.submitButton}>
+                バックアップをダウンロード
+              </button>
+            </div>
+
+            <div style={styles.backupCard}>
+              <div style={styles.backupIcon}>📂</div>
+              <h3>バックアップ復元</h3>
+              <p>保存したJSONファイルからデータを復元します。</p>
+              <button 
+                onClick={() => fileInputRef.current?.click()} 
+                style={styles.importButton}
+              >
+                ファイルを選択して復元
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+
+          <div style={styles.backupNote}>
+            <h4>💡 バックアップのヒント</h4>
+            <ul>
+              <li>月末作業後は必ずバックアップを取得してください</li>
+              <li>バックアップファイルはクラウドストレージ（Google Drive等）に保存することをお勧めします</li>
+              <li>PCの買い替え時は、バックアップファイルを新しいPCで復元できます</li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
+    // ============================================
+    // スタイル定義
+    // ============================================
+    const styles = {
+      container: {
+        display: 'flex',
+        minHeight: '100vh',
+        backgroundColor: '#f5f5f5',
+        fontFamily: '"Noto Sans JP", "Hiragino Sans", "Meiryo", sans-serif',
+      },
+      sidebar: {
+        width: 220,
+        backgroundColor: '#1a1a2e',
+        color: '#fff',
+        padding: '20px 0',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'fixed',
+        height: '100vh',
+        overflowY: 'auto',
+      },
+      logo: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 20px 20px',
+        borderBottom: '1px solid #333',
+        marginBottom: 20,
+      },
+      logoIcon: { fontSize: 28, marginRight: 10 },
+      logoText: { fontSize: 18, fontWeight: 'bold' },
+      nav: { flex: 1 },
+      navItem: {
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%',
+        padding: '12px 20px',
+        border: 'none',
+        backgroundColor: 'transparent',
+        color: '#aaa',
+        cursor: 'pointer',
+        fontSize: 14,
+        textAlign: 'left',
+        transition: 'all 0.2s',
+      },
+      navItemActive: {
+        backgroundColor: '#16213e',
+        color: '#fff',
+        borderLeft: '3px solid #e94560',
+      },
+      navIcon: { marginRight: 10, fontSize: 16 },
+      navLabel: { flex: 1 },
+      fiscalYear: {
+        padding: '15px 20px',
+        fontSize: 12,
+        color: '#888',
+        borderTop: '1px solid #333',
+      },
+      main: { flex: 1, marginLeft: 220, padding: 30 },
+      notification: {
+        position: 'fixed',
+        top: 20,
+        right: 20,
+        padding: '12px 24px',
+        borderRadius: 8,
+        fontWeight: 'bold',
+        zIndex: 1000,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      },
+      viewContainer: { maxWidth: 1400, margin: '0 auto' },
+      viewTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 24, color: '#1a1a2e' },
+      cardGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: 20,
+        marginBottom: 30,
+      },
+      card: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      },
+      cardHeader: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#666', marginBottom: 12 },
+      cardIcon: { fontSize: 20 },
+      cardValue: { fontSize: 32, fontWeight: 'bold', color: '#1a1a2e' },
+      cardSub: { fontSize: 13, color: '#888', marginTop: 8 },
+      progressBar: { height: 8, backgroundColor: '#e5e7eb', borderRadius: 4, marginTop: 12, overflow: 'hidden' },
+      progressFill: { height: '100%', backgroundColor: '#10b981', borderRadius: 4, transition: 'width 0.3s ease' },
+      section: { backgroundColor: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+      sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#1a1a2e' },
+      tableContainer: { overflowX: 'auto' },
+      wideTableContainer: { overflowX: 'auto', maxWidth: '100%' },
+      table: { width: '100%', borderCollapse: 'collapse', fontSize: 14 },
+      th: { backgroundColor: '#f8f9fa', padding: '12px 8px', textAlign: 'left', fontWeight: 'bold', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap' },
+      thSub: { backgroundColor: '#f8f9fa', padding: '8px', textAlign: 'left', fontSize: 11, borderBottom: '2px solid #e5e7eb' },
+      td: { padding: '10px 8px', borderBottom: '1px solid #e5e7eb' },
+      inlineSelect: { padding: '4px 8px', border: '1px solid #ddd', borderRadius: 4, backgroundColor: '#fff', cursor: 'pointer' },
+      stepIndicator: { display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 40 },
+      step: { display: 'flex', alignItems: 'center', gap: 8, color: '#aaa' },
+      stepActive: { color: '#e94560', fontWeight: 'bold' },
+      stepNumber: { width: 28, height: 28, borderRadius: '50%', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 },
+      stepLine: { width: 60, height: 2, backgroundColor: '#e5e7eb', margin: '0 10px' },
+      uploadSection: { textAlign: 'center', maxWidth: 500, margin: '0 auto' },
+      uploadArea: { border: '3px dashed #ddd', borderRadius: 16, padding: 60, cursor: 'pointer', backgroundColor: '#fafafa', transition: 'all 0.2s' },
+      uploadIcon: { fontSize: 64, marginBottom: 16 },
+      uploadText: { fontSize: 18, color: '#333', marginBottom: 8 },
+      uploadSubtext: { fontSize: 14, color: '#888' },
+      processing: { textAlign: 'center' },
+      spinner: { width: 40, height: 40, border: '4px solid #e5e7eb', borderTop: '4px solid #e94560', borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 1s linear infinite' },
+      orDivider: { margin: '30px 0', color: '#888', position: 'relative' },
+      manualButton: { padding: '12px 32px', backgroundColor: '#fff', border: '2px solid #1a1a2e', borderRadius: 8, color: '#1a1a2e', fontSize: 16, cursor: 'pointer', transition: 'all 0.2s' },
+      formSection: { backgroundColor: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+      formGrid: { display: 'grid', gap: 30 },
+      imagePreview: { backgroundColor: '#f8f9fa', borderRadius: 8, padding: 16 },
+      previewTitle: { fontSize: 14, marginBottom: 12, color: '#666' },
+      previewImage: { maxWidth: '100%', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
+      formPanel: { padding: '0 16px' },
+      formTitle: { fontSize: 18, marginBottom: 20, color: '#1a1a2e' },
+      formGroup: { marginBottom: 20 },
+      label: { display: 'block', fontSize: 14, fontWeight: 'bold', marginBottom: 8, color: '#333' },
+      input: { width: '100%', padding: '10px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, boxSizing: 'border-box' },
+      customerInputGroup: { display: 'flex', gap: 10 },
+      newCustomerNote: { display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 },
+      newBadge: { backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 8px', borderRadius: 4, fontSize: 12, fontWeight: 'bold' },
+      rankSelect: { padding: '6px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14 },
+      itemRow: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 },
+      productSelect: { flex: 1, padding: '10px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14 },
+      quantityInput: { width: 60, padding: '10px 8px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, textAlign: 'center' },
+      itemPrice: { width: 80, textAlign: 'right', fontWeight: 'bold' },
+      removeButton: { width: 32, height: 32, border: 'none', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: 6, cursor: 'pointer', fontSize: 14 },
+      addItemButton: { padding: '8px 16px', backgroundColor: '#f0f9ff', border: '1px dashed #3b82f6', borderRadius: 6, color: '#3b82f6', cursor: 'pointer', fontSize: 14 },
+      totalSection: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderTop: '2px solid #e5e7eb', marginTop: 20 },
+      totalAmount: { fontSize: 24, fontWeight: 'bold', color: '#1a1a2e' },
+      buttonGroup: { display: 'flex', gap: 12, marginTop: 24 },
+      cancelButton: { flex: 1, padding: '12px 24px', backgroundColor: '#f3f4f6', border: 'none', borderRadius: 8, color: '#666', fontSize: 16, cursor: 'pointer' },
+      submitButton: { flex: 1, padding: '12px 24px', backgroundColor: '#e94560', border: 'none', borderRadius: 8, color: '#fff', fontSize: 16, fontWeight: 'bold', cursor: 'pointer' },
+      completionSection: { textAlign: 'center', padding: 60 },
+      completionIcon: { fontSize: 64, marginBottom: 20 },
+      completionTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#1a1a2e' },
+      completionText: { color: '#666', marginBottom: 30, lineHeight: 1.8 },
+      filterBar: { display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' },
+      filterGroup: { display: 'flex', alignItems: 'center', gap: 8 },
+      filterSelect: { padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14 },
+      searchInput: { padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, width: 200 },
+      autoCalcButton: { padding: '8px 16px', backgroundColor: '#3b82f6', border: 'none', borderRadius: 6, color: '#fff', fontSize: 14, cursor: 'pointer' },
+      printButton: { padding: '8px 16px', backgroundColor: '#059669', border: 'none', borderRadius: 6, color: '#fff', fontSize: 14, cursor: 'pointer', marginLeft: 'auto' },
+      progressSection: { backgroundColor: '#fff', borderRadius: 12, padding: 24, marginBottom: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+      progressHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+      progressTitle: { fontSize: 18, fontWeight: 'bold' },
+      progressCount: { fontSize: 24, fontWeight: 'bold', color: '#1a1a2e' },
+      largeProgressBar: { height: 20, backgroundColor: '#e5e7eb', borderRadius: 10, overflow: 'hidden' },
+      progressPercent: { textAlign: 'right', marginTop: 8, color: '#666', fontSize: 14 },
+      countGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8, backgroundColor: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+      countCell: { aspectRatio: '1', border: '1px solid #e5e7eb', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: 10, padding: 4, textAlign: 'center' },
+      cellNumber: { fontWeight: 'bold', color: '#888' },
+      cellName: { fontSize: 9, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' },
+      reportForm: { backgroundColor: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+      reportSection: { marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #e5e7eb' },
+      reportSectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 16, color: '#1a1a2e' },
+      reportRow: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+      reportInput: { width: 120, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14 },
+      smallInput: { width: 60, padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, textAlign: 'center' },
+      tabs: { display: 'flex', gap: 4, marginBottom: 24 },
+      tab: { padding: '12px 24px', border: 'none', backgroundColor: '#e5e7eb', borderRadius: '8px 8px 0 0', cursor: 'pointer', fontSize: 14, color: '#666' },
+      tabActive: { backgroundColor: '#fff', color: '#1a1a2e', fontWeight: 'bold' },
+      addForm: { backgroundColor: '#f8f9fa', borderRadius: 8, padding: 20, marginBottom: 24 },
+      addFormRow: { display: 'flex', gap: 12, marginTop: 12 },
+      addButton: { padding: '10px 24px', backgroundColor: '#10b981', border: 'none', borderRadius: 6, color: '#fff', fontSize: 14, cursor: 'pointer' },
+      csvImport: { display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 },
+      importButton: { padding: '10px 20px', backgroundColor: '#3b82f6', border: 'none', borderRadius: 6, color: '#fff', fontSize: 14, cursor: 'pointer' },
+      csvNote: { fontSize: 12, color: '#888' },
+      deleteButton: { padding: '4px 12px', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: 4, color: '#dc2626', fontSize: 12, cursor: 'pointer' },
+      note: { color: '#666', marginBottom: 20 },
+      productCategory: { marginBottom: 30 },
+      productCategoryTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 12, color: '#1a1a2e' },
+      backupSection: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 30 },
+      backupCard: { backgroundColor: '#fff', borderRadius: 12, padding: 30, textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+      backupIcon: { fontSize: 48, marginBottom: 16 },
+      backupNote: { backgroundColor: '#fef3c7', borderRadius: 12, padding: 24 },
+      // 製品追加機能用スタイル
+      productAddFormRow: { display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' },
+      productFormGroup: { display: 'flex', flexDirection: 'column', gap: 4 },
+      smallLabel: { fontSize: 12, color: '#666', fontWeight: '500' },
+      customCountBadge: { marginLeft: 10, fontSize: 12, backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: 10, fontWeight: 'normal' },
+      customBadge: { color: '#f59e0b', marginRight: 4 },
+      builtInLabel: { fontSize: 11, color: '#9ca3af', padding: '2px 6px', backgroundColor: '#f3f4f6', borderRadius: 3 },
+      // 売上履歴機能用スタイル
+      editModeBadge: { marginLeft: 12, fontSize: 14, backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 12px', borderRadius: 6, fontWeight: 'normal' },
+      editModeHeader: { backgroundColor: '#fef3c7', color: '#92400e', padding: '12px 16px', borderRadius: 8, marginBottom: 20, fontSize: 14 },
+      historySection: { marginTop: 40, backgroundColor: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+      historyHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+      historySectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1a1a2e', margin: 0 },
+      historyCount: { fontSize: 13, color: '#666' },
+      actionButtons: { display: 'flex', gap: 8 },
+      editButton: { padding: '6px 10px', backgroundColor: '#dbeafe', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 },
+      deleteButtonSmall: { padding: '6px 10px', backgroundColor: '#fee2e2', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 },
+      editingRow: { backgroundColor: '#fef9c3' },
+      noHistory: { textAlign: 'center', padding: '40px 20px', color: '#888' },
+      monthEndSection: { marginTop: 24, padding: 20, backgroundColor: '#fef3c7', borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 },
+      monthEndWarning: { flex: 1 },
+      monthEndNote: { fontSize: 12, color: '#92400e', marginTop: 4 },
+      clearHistoryButton: { padding: '12px 24px', backgroundColor: '#f59e0b', border: 'none', borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' },
+    };
+
+    // レンダリング
+    ReactDOM.render(<CosmeticsSalesApp />, document.getElementById('root'));
+  </script>
+</body>
+</html>
