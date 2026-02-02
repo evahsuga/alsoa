@@ -141,21 +141,59 @@ function CustomerList({ customers, sales, updateCustomer }) {
         </button>
       </div>
 
-      <div style={styles.wideTableContainer}>
-        <table style={styles.table}>
+      <div style={{
+        ...styles.wideTableContainer,
+        maxHeight: 'calc(100vh - 250px)',
+        overflowY: 'auto',
+        overflowX: 'auto'
+      }}>
+        <table style={{...styles.table, borderCollapse: 'separate', borderSpacing: 0}}>
           <thead>
             <tr>
-              <th style={{...styles.th, position: 'sticky', left: 0, backgroundColor: '#f8f9fa', zIndex: 1}}>No</th>
-              <th style={{...styles.th, position: 'sticky', left: 40, backgroundColor: '#f8f9fa', zIndex: 1}}>ランク</th>
-              <th style={{...styles.th, position: 'sticky', left: 90, backgroundColor: '#f8f9fa', zIndex: 1, minWidth: 100}}>お客様名</th>
-              <th style={styles.th}>年間購入金額</th>
-              <th style={styles.th}>月平均</th>
-              <th style={styles.th}>QS</th>
-              <th style={styles.th}>L</th>
-              <th style={styles.th}>P</th>
-              <th style={styles.th}>ES</th>
+              <th style={{
+                ...styles.th,
+                position: 'sticky',
+                top: 0,
+                left: 0,
+                backgroundColor: '#f8f9fa',
+                zIndex: 3,
+                width: 40
+              }}>No</th>
+              <th style={{
+                ...styles.th,
+                position: 'sticky',
+                top: 0,
+                left: 40,
+                backgroundColor: '#f8f9fa',
+                zIndex: 3,
+                width: 50
+              }}>ランク</th>
+              <th style={{
+                ...styles.th,
+                position: 'sticky',
+                top: 0,
+                left: 90,
+                backgroundColor: '#f8f9fa',
+                zIndex: 3,
+                minWidth: 100
+              }}>お客様名</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 100}}>年間購入</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 80}}>月平均</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>QS</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>L</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>P</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>ES</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 50}}>other</th>
               {FISCAL_MONTHS.map(month => (
-                <th key={month} style={styles.th}>{month}月</th>
+                <th key={month} style={{
+                  ...styles.th,
+                  position: 'sticky',
+                  top: 0,
+                  backgroundColor: '#f8f9fa',
+                  zIndex: 2,
+                  width: 60,
+                  minWidth: 60
+                }}>{month}月</th>
               ))}
             </tr>
           </thead>
@@ -164,8 +202,22 @@ function CustomerList({ customers, sales, updateCustomer }) {
               const salesData = getCustomerSales(customer.name);
               return (
                 <tr key={customer.id}>
-                  <td style={{...styles.td, position: 'sticky', left: 0, backgroundColor: '#fff', zIndex: 1}}>{index + 1}</td>
-                  <td style={{...styles.td, position: 'sticky', left: 40, backgroundColor: '#fff', zIndex: 1}}>
+                  <td style={{
+                    ...styles.td,
+                    position: 'sticky',
+                    left: 0,
+                    backgroundColor: '#fff',
+                    zIndex: 1,
+                    width: 40
+                  }}>{index + 1}</td>
+                  <td style={{
+                    ...styles.td,
+                    position: 'sticky',
+                    left: 40,
+                    backgroundColor: '#fff',
+                    zIndex: 1,
+                    width: 50
+                  }}>
                     <select
                       value={customer.rank}
                       onChange={(e) => updateCustomer(customer.id, { rank: e.target.value })}
@@ -177,16 +229,33 @@ function CustomerList({ customers, sales, updateCustomer }) {
                       <option value="D">D</option>
                     </select>
                   </td>
-                  <td style={{...styles.td, position: 'sticky', left: 90, backgroundColor: '#fff', zIndex: 1}}>{customer.name}</td>
-                  <td style={styles.td}>¥{salesData.totalAmount.toLocaleString()}</td>
-                  <td style={styles.td}>¥{salesData.monthlyAverage.toLocaleString()}</td>
-                  <td style={styles.td}>{salesData.categoryCounts.QS || '-'}</td>
-                  <td style={styles.td}>{salesData.categoryCounts.L || '-'}</td>
-                  <td style={styles.td}>{salesData.categoryCounts.P || '-'}</td>
-                  <td style={styles.td}>{salesData.categoryCounts.ES || '-'}</td>
+                  <td style={{
+                    ...styles.td,
+                    position: 'sticky',
+                    left: 90,
+                    backgroundColor: '#fff',
+                    zIndex: 1,
+                    minWidth: 100
+                  }}>{customer.name}</td>
+                  <td style={{...styles.td, width: 100, textAlign: 'right'}}>¥{salesData.totalAmount.toLocaleString()}</td>
+                  <td style={{...styles.td, width: 80, textAlign: 'right'}}>¥{salesData.monthlyAverage.toLocaleString()}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.QS || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.L || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.P || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.ES || '-'}</td>
+                  <td style={{...styles.td, width: 50, textAlign: 'center'}}>{salesData.categoryCounts.other || '-'}</td>
                   {FISCAL_MONTHS.map(month => (
-                    <td key={month} style={{...styles.td, fontSize: 11, maxWidth: 80}}>
-                      {salesData.monthlyPurchases[month]?.join(',') || '-'}
+                    <td key={month} style={{
+                      ...styles.td,
+                      fontSize: 11,
+                      width: 60,
+                      minWidth: 60,
+                      wordBreak: 'break-word',
+                      whiteSpace: 'normal',
+                      verticalAlign: 'top',
+                      padding: '8px 4px'
+                    }}>
+                      {salesData.monthlyPurchases[month]?.join(', ') || '-'}
                     </td>
                   ))}
                 </tr>

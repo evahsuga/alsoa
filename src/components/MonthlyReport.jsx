@@ -35,7 +35,7 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
     },
     afterFollow: { total: 0, done: 0 },
     metCount: 0,
-    threeStepSales: { qs: 0, pack: 0, lotion: 0 },
+    threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
     purchase: 0,
     selfUse: 0
   });
@@ -64,7 +64,7 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         },
         afterFollow: { total: 0, done: 0 },
         metCount: 0,
-        threeStepSales: { qs: 0, pack: 0, lotion: 0 },
+        threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
         purchase: 0,
         selfUse: 0
       });
@@ -81,7 +81,7 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
     });
 
     let totalSales = 0;
-    let qsCount = 0, packCount = 0, lotionCount = 0;
+    let qsCount = 0, packCount = 0, lotionCount = 0, moCount = 0, spCount = 0;
 
     monthSales.forEach(sale => {
       sale.items.forEach(item => {
@@ -89,13 +89,15 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         if (item.category === 'QS') qsCount += item.quantity;
         if (item.category === 'P') packCount += item.quantity;
         if (item.category === 'L') lotionCount += item.quantity;
+        if (item.category === 'MO') moCount += item.quantity;
+        if (item.category === 'SP') spCount += item.quantity;
       });
     });
 
     setReport({
       ...report,
       resultSales: totalSales,
-      threeStepSales: { qs: qsCount, pack: packCount, lotion: lotionCount }
+      threeStepSales: { qs: qsCount, pack: packCount, lotion: lotionCount, mo: moCount, sp: spCount }
     });
   };
 
@@ -207,12 +209,16 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         <table>
           <tbody>
             <tr>
-              <th style="width:120px;">QS（せっけん）</th>
-              <td style="width:80px;" class="text-center">${report.threeStepSales?.qs || 0}個</td>
-              <th style="width:80px;">パック</th>
-              <td style="width:80px;" class="text-center">${report.threeStepSales?.pack || 0}本</td>
-              <th style="width:100px;">ローション</th>
-              <td style="width:80px;" class="text-center">${report.threeStepSales?.lotion || 0}本</td>
+              <th style="width:100px;">QS（せっけん）</th>
+              <td style="width:60px;" class="text-center">${report.threeStepSales?.qs || 0}個</td>
+              <th style="width:60px;">パック</th>
+              <td style="width:60px;" class="text-center">${report.threeStepSales?.pack || 0}本</td>
+              <th style="width:80px;">ローション</th>
+              <td style="width:60px;" class="text-center">${report.threeStepSales?.lotion || 0}本</td>
+              <th style="width:40px;">MO</th>
+              <td style="width:60px;" class="text-center">${report.threeStepSales?.mo || 0}本</td>
+              <th style="width:40px;">SP</th>
+              <td style="width:60px;" class="text-center">${report.threeStepSales?.sp || 0}本</td>
             </tr>
           </tbody>
         </table>
@@ -299,7 +305,7 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         {/* 3ステップ実売数 */}
         <div style={styles.reportSection}>
           <h3 style={styles.reportSectionTitle}>※3ステップ実売数</h3>
-          <div style={styles.reportRow}>
+          <div style={{...styles.reportRow, flexWrap: 'wrap', gap: '8px 4px'}}>
             <span>QS</span>
             <input
               type="number"
@@ -310,7 +316,7 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
               })}
               style={styles.smallInput}
             />
-            <span>個 ・ パック</span>
+            <span>個 ／ パック</span>
             <input
               type="number"
               value={report.threeStepSales?.pack || 0}
@@ -320,13 +326,33 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
               })}
               style={styles.smallInput}
             />
-            <span>本 ・ ローション</span>
+            <span>本 ／ ローション</span>
             <input
               type="number"
               value={report.threeStepSales?.lotion || 0}
               onChange={(e) => setReport({
                 ...report,
                 threeStepSales: { ...report.threeStepSales, lotion: parseInt(e.target.value) || 0 }
+              })}
+              style={styles.smallInput}
+            />
+            <span>本 ／ MO</span>
+            <input
+              type="number"
+              value={report.threeStepSales?.mo || 0}
+              onChange={(e) => setReport({
+                ...report,
+                threeStepSales: { ...report.threeStepSales, mo: parseInt(e.target.value) || 0 }
+              })}
+              style={styles.smallInput}
+            />
+            <span>本 ／ SP</span>
+            <input
+              type="number"
+              value={report.threeStepSales?.sp || 0}
+              onChange={(e) => setReport({
+                ...report,
+                threeStepSales: { ...report.threeStepSales, sp: parseInt(e.target.value) || 0 }
               })}
               style={styles.smallInput}
             />
