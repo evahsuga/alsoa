@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/alsoa/static/js/main.d1ee9374.js",
+    "main.js": "/alsoa/static/js/main.7837d87d.js",
     "index.html": "/alsoa/index.html",
-    "main.d1ee9374.js.map": "/alsoa/static/js/main.d1ee9374.js.map"
+    "main.7837d87d.js.map": "/alsoa/static/js/main.7837d87d.js.map"
   },
   "entrypoints": [
-    "static/js/main.d1ee9374.js"
+    "static/js/main.7837d87d.js"
   ]
 }
