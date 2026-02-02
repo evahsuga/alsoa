@@ -35,6 +35,7 @@ import BackupManagement from './components/BackupManagement';
 
 // カスタムフック
 import { useNotification } from './hooks/useNotification';
+import { useMediaQuery } from './hooks/useMediaQuery';
 
 /**
  * メインアプリコンポーネント
@@ -42,6 +43,10 @@ import { useNotification } from './hooks/useNotification';
 function App() {
   // ビュー管理
   const [currentView, setCurrentView] = useState('dashboard');
+
+  // モバイル対応
+  const { isMobile } = useMediaQuery();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // データState
   const [customers, setCustomers] = useState([]);
@@ -341,14 +346,46 @@ function App() {
     { id: 'backup', label: 'データ管理', icon: '💾' },
   ];
 
+  /**
+   * ナビゲーション選択処理（モバイル時はサイドバーを閉じる）
+   */
+  const handleNavClick = (viewId) => {
+    setCurrentView(viewId);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   // ============================================
   // レンダリング
   // ============================================
 
   return (
     <div style={styles.container}>
+      {/* モバイル: ハンバーガーボタン */}
+      {isMobile && (
+        <button
+          style={styles.hamburgerButton}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="メニュー"
+        >
+          {sidebarOpen ? '✕' : '☰'}
+        </button>
+      )}
+
+      {/* モバイル: オーバーレイ */}
+      {isMobile && sidebarOpen && (
+        <div
+          style={styles.overlay}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* サイドバー */}
-      <aside style={styles.sidebar}>
+      <aside style={isMobile ? {
+        ...styles.sidebarMobile,
+        ...(sidebarOpen ? styles.sidebarMobileOpen : {})
+      } : styles.sidebar}>
         <div style={styles.logo}>
           <span style={styles.logoIcon}>💄</span>
           <span style={styles.logoText}>販売管理</span>
@@ -357,9 +394,9 @@ function App() {
           {menuItems.map(item => (
             <button
               key={item.id}
-              onClick={() => setCurrentView(item.id)}
+              onClick={() => handleNavClick(item.id)}
               style={{
-                ...styles.navItem,
+                ...(isMobile ? styles.navItemMobile : styles.navItem),
                 ...(currentView === item.id ? styles.navItemActive : {})
               }}
             >
@@ -376,7 +413,7 @@ function App() {
       </aside>
 
       {/* メインコンテンツ */}
-      <main style={styles.main}>
+      <main style={isMobile ? styles.mainMobile : styles.main}>
         {/* 通知 */}
         {notification && (
           <div style={{

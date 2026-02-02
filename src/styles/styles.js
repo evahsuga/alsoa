@@ -272,6 +272,452 @@ export const styles = {
   monthEndWarning: { flex: 1 },
   monthEndNote: { fontSize: 12, color: '#92400e', marginTop: 4 },
   clearHistoryButton: { padding: '12px 24px', backgroundColor: COLORS.warning, border: 'none', borderRadius: 8, color: COLORS.white, fontSize: 14, fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' },
+
+  // ========================================
+  // モバイル用スタイル
+  // ========================================
+
+  // ハンバーガーボタン
+  hamburgerButton: {
+    position: 'fixed',
+    top: 12,
+    left: 12,
+    zIndex: 1001,
+    width: 44,
+    height: 44,
+    backgroundColor: COLORS.primary,
+    border: 'none',
+    borderRadius: 8,
+    color: COLORS.white,
+    fontSize: 24,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+  },
+
+  // モバイル用サイドバー（スライドイン）
+  sidebarMobile: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '85%',
+    maxWidth: 300,
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    color: COLORS.white,
+    padding: '20px 0',
+    display: 'flex',
+    flexDirection: 'column',
+    zIndex: 1000,
+    transform: 'translateX(-100%)',
+    transition: 'transform 0.3s ease',
+    overflowY: 'auto',
+  },
+  sidebarMobileOpen: {
+    transform: 'translateX(0)',
+  },
+
+  // オーバーレイ
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+  },
+
+  // モバイル用メインエリア
+  mainMobile: {
+    flex: 1,
+    marginLeft: 0,
+    paddingTop: 70,
+    padding: '70px 16px 16px 16px',
+    minHeight: '100vh',
+  },
+
+  // モバイル用ナビアイテム（タッチフレンドリー）
+  navItemMobile: {
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    padding: '16px 20px',
+    minHeight: 48,
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#aaa',
+    cursor: 'pointer',
+    fontSize: 16,
+    textAlign: 'left',
+    transition: 'all 0.2s',
+  },
+
+  // モバイル用カードグリッド（1列）
+  cardGridMobile: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: 12,
+    marginBottom: 20,
+  },
+
+  // モバイル用入力（iOS自動ズーム防止）
+  inputMobile: {
+    width: '100%',
+    padding: '14px 12px',
+    border: `1px solid ${COLORS.gray[300]}`,
+    borderRadius: 8,
+    fontSize: 16,
+    boxSizing: 'border-box',
+  },
+
+  // モバイル用セレクト
+  selectMobile: {
+    width: '100%',
+    padding: '14px 12px',
+    border: `1px solid ${COLORS.gray[300]}`,
+    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: COLORS.white,
+    boxSizing: 'border-box',
+  },
+
+  // モバイル用ボタン（タッチフレンドリー）
+  buttonMobile: {
+    minHeight: 48,
+    minWidth: 48,
+    padding: '14px 20px',
+    fontSize: 16,
+    borderRadius: 8,
+  },
+
+  // カード形式テーブル（モバイル用）
+  cardTable: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  },
+  cardTableItem: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  },
+  cardTableRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '8px 0',
+    borderBottom: `1px solid ${COLORS.gray[100]}`,
+  },
+  cardTableRowLast: {
+    borderBottom: 'none',
+  },
+  cardLabel: {
+    fontSize: 13,
+    color: COLORS.gray[500],
+    fontWeight: '500',
+  },
+  cardValue: {
+    fontSize: 15,
+    color: COLORS.gray[800],
+    fontWeight: '500',
+  },
+  cardAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  cardActions: {
+    display: 'flex',
+    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTop: `1px solid ${COLORS.gray[200]}`,
+  },
+
+  // モバイル用商品カード
+  productCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  },
+  productSelectMobile: {
+    width: '100%',
+    padding: '14px 12px',
+    border: `1px solid ${COLORS.gray[300]}`,
+    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: COLORS.white,
+    marginBottom: 12,
+  },
+  quantityRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  quantityButton: {
+    width: 44,
+    height: 44,
+    border: `1px solid ${COLORS.gray[300]}`,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    fontSize: 20,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityDisplay: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    minWidth: 40,
+    textAlign: 'center',
+  },
+  itemPriceMobile: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  removeButtonMobile: {
+    width: '100%',
+    padding: '10px',
+    marginTop: 12,
+    backgroundColor: '#fee2e2',
+    border: 'none',
+    borderRadius: 8,
+    color: COLORS.danger,
+    fontSize: 14,
+    cursor: 'pointer',
+  },
+  addItemButtonMobile: {
+    width: '100%',
+    padding: '16px',
+    backgroundColor: '#f0f9ff',
+    border: `2px dashed ${COLORS.info}`,
+    borderRadius: 12,
+    color: COLORS.info,
+    fontSize: 16,
+    cursor: 'pointer',
+    fontWeight: '500',
+  },
+
+  // モバイル用アクションボタン
+  editButtonMobile: {
+    flex: 1,
+    padding: '12px 16px',
+    backgroundColor: '#dbeafe',
+    border: 'none',
+    borderRadius: 8,
+    color: COLORS.info,
+    fontSize: 14,
+    fontWeight: '500',
+    cursor: 'pointer',
+  },
+  deleteButtonMobile: {
+    flex: 1,
+    padding: '12px 16px',
+    backgroundColor: '#fee2e2',
+    border: 'none',
+    borderRadius: 8,
+    color: COLORS.danger,
+    fontSize: 14,
+    fontWeight: '500',
+    cursor: 'pointer',
+  },
+
+  // モバイル用ステップインジケーター
+  stepIndicatorMobile: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    gap: 8,
+  },
+  stepMobile: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: '50%',
+    backgroundColor: COLORS.gray[200],
+    color: COLORS.gray[500],
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  stepActiveMobile: {
+    backgroundColor: COLORS.accent,
+    color: COLORS.white,
+  },
+  stepLineMobile: {
+    width: 40,
+    height: 2,
+    backgroundColor: COLORS.gray[200],
+  },
+
+  // モバイル用フォームセクション
+  formSectionMobile: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  },
+  formGroupMobile: {
+    marginBottom: 16,
+  },
+  labelMobile: {
+    display: 'block',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: COLORS.gray[700],
+  },
+
+  // モバイル用合計セクション
+  totalSectionMobile: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px 0',
+    borderTop: `2px solid ${COLORS.gray[200]}`,
+    marginTop: 16,
+  },
+  totalLabelMobile: {
+    fontSize: 16,
+    color: COLORS.gray[600],
+  },
+  totalAmountMobile: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+
+  // モバイル用ボタングループ
+  buttonGroupMobile: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    marginTop: 20,
+  },
+  submitButtonMobile: {
+    width: '100%',
+    padding: '16px 24px',
+    backgroundColor: COLORS.accent,
+    border: 'none',
+    borderRadius: 12,
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+    cursor: 'pointer',
+  },
+  cancelButtonMobile: {
+    width: '100%',
+    padding: '14px 24px',
+    backgroundColor: COLORS.gray[100],
+    border: 'none',
+    borderRadius: 12,
+    color: COLORS.gray[600],
+    fontSize: 16,
+    cursor: 'pointer',
+  },
+
+  // モバイル用ビュータイトル
+  viewTitleMobile: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: COLORS.primary,
+  },
+
+  // モバイル用アップロードエリア
+  uploadAreaMobile: {
+    border: `3px dashed ${COLORS.gray[300]}`,
+    borderRadius: 16,
+    padding: 40,
+    cursor: 'pointer',
+    backgroundColor: COLORS.gray[50],
+    textAlign: 'center',
+  },
+  uploadIconMobile: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  uploadTextMobile: {
+    fontSize: 16,
+    color: COLORS.gray[800],
+    marginBottom: 8,
+  },
+
+  // OCR関連スタイル
+  ocrConfidenceBar: {
+    backgroundColor: COLORS.gray[50],
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  confidenceIndicator: {
+    height: 8,
+    backgroundColor: COLORS.gray[200],
+    borderRadius: 4,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  confidenceFill: {
+    height: '100%',
+    borderRadius: 4,
+    transition: 'width 0.3s ease',
+  },
+  confidenceWarning: {
+    display: 'block',
+    marginTop: 8,
+    fontSize: 12,
+    color: COLORS.warning,
+  },
+
+  // OCR設定セクション
+  ocrSettingSection: {
+    marginTop: 24,
+    padding: 20,
+    backgroundColor: COLORS.gray[50],
+    borderRadius: 12,
+  },
+  ocrSettingTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: COLORS.primary,
+  },
+  apiKeyInput: {
+    width: '100%',
+    padding: '12px',
+    border: `1px solid ${COLORS.gray[300]}`,
+    borderRadius: 8,
+    fontSize: 14,
+    fontFamily: 'monospace',
+    boxSizing: 'border-box',
+  },
+  apiKeyNote: {
+    fontSize: 12,
+    color: COLORS.gray[500],
+    marginTop: 8,
+    lineHeight: 1.5,
+  },
+  saveApiKeyButton: {
+    marginTop: 12,
+    padding: '10px 20px',
+    backgroundColor: COLORS.success,
+    border: 'none',
+    borderRadius: 8,
+    color: COLORS.white,
+    fontSize: 14,
+    cursor: 'pointer',
+  },
 };
 
 export default styles;
