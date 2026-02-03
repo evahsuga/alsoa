@@ -162,6 +162,12 @@ export const PRODUCT_MASTER = {
       { code: '448622', name: 'リップブラシ', price: 1500, category: 'other' },
       { code: '441759', name: 'リベストメイクオフ', price: 3000, category: 'MO' },
     ]
+  },
+
+  other: {
+    name: 'その他',
+    taxRate: 10,
+    products: []
   }
 };
 
