@@ -36,7 +36,8 @@ function MasterManagement({
     baseMakeup: ['SP', 'MO', 'other'],
     hairBodyCare: ['other'],
     healthcare: ['酵素', 'other'],
-    pointMakeup: ['色', 'other']
+    pointMakeup: ['色', 'MO', 'other'],
+    other: ['other']
   };
 
   /**
@@ -242,6 +243,7 @@ function MasterManagement({
                   <option value="hairBodyCare">ヘアケア&ボディケア</option>
                   <option value="healthcare">ヘルスケア</option>
                   <option value="pointMakeup">ポイントメイクアップ</option>
+                  <option value="other">その他</option>
                 </select>
               </div>
               <div style={styles.productFormGroup}>
