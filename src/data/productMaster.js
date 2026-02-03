@@ -52,7 +52,6 @@ export const PRODUCT_MASTER = {
       { code: '448490', name: 'リベストリキッドF ヴェールナチュラダーク(14)', price: 6000, category: 'other' },
       { code: '441618', name: 'リベストシルキーパウダーF ピンク(21)', price: 5600, category: 'other' },
       { code: '441626', name: 'リベストシルキーパウダーF ナチュラルライト(22)', price: 5600, category: 'other' },
-      { code: '441759', name: 'メイクオフ', price: 3000, category: 'MO' },
     ]
   },
 
@@ -161,6 +160,7 @@ export const PRODUCT_MASTER = {
       { code: '446072', name: 'リベストナチュラルロングマスカラ ブラック', price: 3300, category: 'other' },
       { code: '420670', name: '眉ブラシ＆コーム', price: 500, category: 'other' },
       { code: '448622', name: 'リップブラシ', price: 1500, category: 'other' },
+      { code: '441759', name: 'リベストメイクオフ', price: 3000, category: 'MO' },
     ]
   }
 };
