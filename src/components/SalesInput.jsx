@@ -12,7 +12,7 @@ import { findProductByCode } from '../utils/productUtils';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import MobileProductSelector from './mobile/MobileProductSelector';
 import MobileSalesHistory from './mobile/MobileSalesHistory';
-import { processImageOCR, hasApiKey, getOCRErrorMessage } from '../services/ocrService';
+import { processImageOCR, hasApiKey, getApiKey, getOCRErrorMessage } from '../services/ocrService';
 import { parseSlipData } from '../services/slipParser';
 
 function SalesInput({
@@ -275,6 +275,28 @@ function SalesInput({
           <div style={{...styles.step, ...(step >= 3 ? styles.stepActive : {})}}>
             <span style={styles.stepNumber}>3</span>
             <span>完了</span>
+          </div>
+        </div>
+      )}
+
+      {/* APIキー状態デバッグ表示 */}
+      {step === 1 && (
+        <div style={{
+          backgroundColor: hasApiKey() ? '#d1fae5' : '#fee2e2',
+          border: `1px solid ${hasApiKey() ? '#10b981' : '#ef4444'}`,
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 16,
+          fontSize: 13
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+            OCR設定状態: {hasApiKey() ? '✅ 設定済み' : '❌ 未設定'}
+          </div>
+          <div style={{ color: '#666' }}>
+            APIキー: {getApiKey() ? `${getApiKey().substring(0, 8)}...（${getApiKey().length}文字）` : 'なし'}
+          </div>
+          <div style={{ color: '#666', marginTop: 4 }}>
+            LocalStorage確認: {typeof window !== 'undefined' && window.localStorage ? 'OK' : 'NG'}
           </div>
         </div>
       )}
