@@ -117,6 +117,81 @@ const PRICE_TO_PRODUCTS = {
 };
 
 /**
+ * 除外パターン（商品行として処理しない行）
+ * これらのキーワードを含む行は商品マッチングから除外される
+ */
+const EXCLUDE_PATTERNS = [
+  // 税計算・合計欄
+  /10\s*%\s*対象/,
+  /8\s*%\s*対象/,
+  /税込.*合計/,
+  /合計.*金額/,
+  /消費税/,
+  /受入.*金額/,
+  /残金/,
+
+  // 振込・銀行情報
+  /振込/,
+  /口座/,
+  /銀行/,
+  /支店/,
+  /普通/,
+  /当座/,
+
+  // メッセージ・挨拶
+  /ありがとう/,
+  /よろしく/,
+  /お願い/,
+  /いつも/,
+  /プレゼント/,
+  /同封/,
+
+  // 伝票ヘッダー・フッター
+  /納品.*書/,
+  /控/,
+  /ARSOA/i,
+  /No\./,
+  /住所/,
+  /電話/,
+  /販売.*業者/,
+  /代表.*者/,
+  /次回.*訪問/,
+  /物品.*受領/,
+
+  // テーブルヘッダー
+  /^品\s*名$/,
+  /^数量$/,
+  /^金額/,
+  /^税率/,
+];
+
+/**
+ * 行が除外対象かどうかを判定
+ * @param {string} line
+ * @returns {boolean}
+ */
+const shouldExcludeLine = (line) => {
+  // 空行や短すぎる行は除外
+  if (!line || line.trim().length < 2) {
+    return true;
+  }
+
+  // 除外パターンにマッチするか確認
+  for (const pattern of EXCLUDE_PATTERNS) {
+    if (pattern.test(line)) {
+      return true;
+    }
+  }
+
+  // 数字のみの行は除外（口座番号など）
+  if (/^\d+$/.test(line.replace(/[\s,]/g, ''))) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
  * OCRテキストから伝票データを抽出
  * @param {OCRResult} ocrResult - OCR処理結果
  * @param {Object} customProducts - カスタム製品データ
@@ -289,6 +364,11 @@ const matchProductsImproved = (lines, allProducts, fullText) => {
 
   // 各行を処理
   for (const line of lines) {
+    // 除外パターンに該当する行はスキップ
+    if (shouldExcludeLine(line)) {
+      continue;
+    }
+
     // 価格を抽出（カンマ区切りにも対応）
     const priceMatch = line.match(/[¥￥]?\s*([0-9,]+)/);
     const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : null;
