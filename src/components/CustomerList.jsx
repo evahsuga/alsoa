@@ -16,6 +16,29 @@ function CustomerList({ customers, sales, updateCustomer }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   /**
+   * 略称を集計用グループにマッピング
+   */
+  const getCategoryGroup = (category) => {
+    if (!category) return ['other'];
+    // QSグループ
+    if (category === 'QS' || category === 'QS(PF') return ['QS'];
+    // Lグループ（ローション）
+    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
+    // Pグループ（パック）
+    if (category === 'P') return ['P'];
+    // MOグループ（メイクオフ）
+    if (category === 'MO') return ['MO'];
+    // SPグループ（下地系）
+    if (category === '下地NP' || category === '下地SP' || category === '下地MP') return ['SP'];
+    // セット3（QS, L, P に各+1）
+    if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'L', 'P'];
+    // ベスト4（QS, L, P, MO に各+1）
+    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'L', 'P', 'MO'];
+    // その他は全てother
+    return ['other'];
+  };
+
+  /**
    * 顧客別の売上データを取得
    */
   const getCustomerSales = (customerName) => {
@@ -27,7 +50,7 @@ function CustomerList({ customers, sales, updateCustomer }) {
     const monthlyPurchases = {};
     FISCAL_MONTHS.forEach(m => monthlyPurchases[m] = []);
 
-    const categoryCounts = { QS: 0, L: 0, P: 0, ES: 0, other: 0 };
+    const categoryCounts = { QS: 0, L: 0, P: 0, MO: 0, SP: 0, other: 0 };
     let totalAmount = 0;
 
     customerSales.forEach(sale => {
@@ -37,11 +60,11 @@ function CustomerList({ customers, sales, updateCustomer }) {
           const abbrev = item.category || 'other';
           monthlyPurchases[month].push(abbrev);
         }
-        if (categoryCounts[item.category] !== undefined) {
-          categoryCounts[item.category] += item.quantity;
-        } else {
-          categoryCounts.other += item.quantity;
-        }
+        // 集計用グループにマッピングしてカウント（複数グループ対応）
+        const groups = getCategoryGroup(item.category);
+        groups.forEach(group => {
+          categoryCounts[group] += item.quantity;
+        });
         totalAmount += item.price * item.quantity;
       });
     });
@@ -74,7 +97,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
           <td class="text-center">${salesData.categoryCounts.QS || '-'}</td>
           <td class="text-center">${salesData.categoryCounts.L || '-'}</td>
           <td class="text-center">${salesData.categoryCounts.P || '-'}</td>
-          <td class="text-center">${salesData.categoryCounts.ES || '-'}</td>
+          <td class="text-center">${salesData.categoryCounts.MO || '-'}</td>
+          <td class="text-center">${salesData.categoryCounts.SP || '-'}</td>
           ${FISCAL_MONTHS.map(month =>
             `<td class="text-center" style="font-size:7pt;">${salesData.monthlyPurchases[month]?.join(',') || '-'}</td>`
           ).join('')}
@@ -98,7 +122,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
             <th style="width:30px;">QS</th>
             <th style="width:30px;">L</th>
             <th style="width:30px;">P</th>
-            <th style="width:30px;">ES</th>
+            <th style="width:30px;">MO</th>
+            <th style="width:30px;">SP</th>
             ${FISCAL_MONTHS.map(m => `<th style="width:45px;">${m}月</th>`).join('')}
           </tr>
         </thead>
@@ -147,7 +172,7 @@ function CustomerList({ customers, sales, updateCustomer }) {
         overflowY: 'auto',
         overflowX: 'auto'
       }}>
-        <table style={{...styles.table, borderCollapse: 'separate', borderSpacing: 0}}>
+        <table style={{...styles.table, borderCollapse: 'separate', borderSpacing: 0, minWidth: 1400, width: 'auto'}}>
           <thead>
             <tr>
               <th style={{
@@ -175,14 +200,17 @@ function CustomerList({ customers, sales, updateCustomer }) {
                 left: 90,
                 backgroundColor: '#f8f9fa',
                 zIndex: 3,
-                minWidth: 100
+                minWidth: 100,
+                borderRight: '2px solid #dee2e6',
+                boxShadow: '2px 0 4px rgba(0,0,0,0.1)'
               }}>お客様名</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 100}}>年間購入</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 80}}>月平均</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>QS</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>L</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>P</th>
-              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>ES</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>MO</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>SP</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 50}}>other</th>
               {FISCAL_MONTHS.map(month => (
                 <th key={month} style={{
@@ -235,14 +263,17 @@ function CustomerList({ customers, sales, updateCustomer }) {
                     left: 90,
                     backgroundColor: '#fff',
                     zIndex: 1,
-                    minWidth: 100
+                    minWidth: 100,
+                    borderRight: '2px solid #dee2e6',
+                    boxShadow: '2px 0 4px rgba(0,0,0,0.1)'
                   }}>{customer.name}</td>
                   <td style={{...styles.td, width: 100, textAlign: 'right'}}>¥{salesData.totalAmount.toLocaleString()}</td>
                   <td style={{...styles.td, width: 80, textAlign: 'right'}}>¥{salesData.monthlyAverage.toLocaleString()}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.QS || '-'}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.L || '-'}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.P || '-'}</td>
-                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.ES || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.MO || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.SP || '-'}</td>
                   <td style={{...styles.td, width: 50, textAlign: 'center'}}>{salesData.categoryCounts.other || '-'}</td>
                   {FISCAL_MONTHS.map(month => (
                     <td key={month} style={{
@@ -250,12 +281,21 @@ function CustomerList({ customers, sales, updateCustomer }) {
                       fontSize: 11,
                       width: 60,
                       minWidth: 60,
-                      wordBreak: 'break-word',
-                      whiteSpace: 'normal',
                       verticalAlign: 'top',
-                      padding: '8px 4px'
+                      padding: '8px 4px',
+                      lineHeight: 1.4
                     }}>
-                      {salesData.monthlyPurchases[month]?.join(', ') || '-'}
+                      {salesData.monthlyPurchases[month]?.length > 0
+                        ? salesData.monthlyPurchases[month].map((abbrev, i) => (
+                            <span key={i} style={{
+                              display: 'inline-block',
+                              whiteSpace: 'nowrap',
+                              marginRight: i < salesData.monthlyPurchases[month].length - 1 ? 4 : 0
+                            }}>
+                              {abbrev}{i < salesData.monthlyPurchases[month].length - 1 ? ',' : ''}
+                            </span>
+                          ))
+                        : '-'}
                     </td>
                   ))}
                 </tr>

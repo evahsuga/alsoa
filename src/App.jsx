@@ -48,6 +48,9 @@ function App() {
   const { isMobile } = useMediaQuery();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // PC用サイドバー折りたたみ
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   // データState
   const [customers, setCustomers] = useState([]);
   const [sales, setSales] = useState([]);
@@ -373,6 +376,34 @@ function App() {
         </button>
       )}
 
+      {/* PC: サイドバー展開ボタン（折りたたみ時のみ表示） */}
+      {!isMobile && sidebarCollapsed && (
+        <button
+          style={{
+            position: 'fixed',
+            top: 12,
+            left: 12,
+            zIndex: 1001,
+            width: 44,
+            height: 44,
+            backgroundColor: COLORS.primary,
+            border: 'none',
+            borderRadius: 8,
+            color: COLORS.white,
+            fontSize: 20,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          }}
+          onClick={() => setSidebarCollapsed(false)}
+          aria-label="メニューを開く"
+        >
+          ☰
+        </button>
+      )}
+
       {/* モバイル: オーバーレイ */}
       {isMobile && sidebarOpen && (
         <div
@@ -385,10 +416,38 @@ function App() {
       <aside style={isMobile ? {
         ...styles.sidebarMobile,
         ...(sidebarOpen ? styles.sidebarMobileOpen : {})
-      } : styles.sidebar}>
-        <div style={styles.logo}>
-          <span style={styles.logoIcon}>💄</span>
-          <span style={styles.logoText}>販売管理</span>
+      } : {
+        ...styles.sidebar,
+        ...(sidebarCollapsed ? { display: 'none' } : {})
+      }}>
+        <div style={{...styles.logo, justifyContent: 'space-between'}}>
+          <div style={{display: 'flex', alignItems: 'center'}}>
+            <span style={styles.logoIcon}>💄</span>
+            <span style={styles.logoText}>販売管理</span>
+          </div>
+          {/* PC: サイドバー折りたたみボタン */}
+          {!isMobile && (
+            <button
+              style={{
+                width: 28,
+                height: 28,
+                backgroundColor: 'transparent',
+                border: '1px solid #555',
+                borderRadius: 4,
+                color: '#aaa',
+                fontSize: 14,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onClick={() => setSidebarCollapsed(true)}
+              aria-label="メニューを閉じる"
+              title="サイドバーを折りたたむ"
+            >
+              ◀
+            </button>
+          )}
         </div>
         <nav style={styles.nav}>
           {menuItems.map(item => (
@@ -413,7 +472,10 @@ function App() {
       </aside>
 
       {/* メインコンテンツ */}
-      <main style={isMobile ? styles.mainMobile : styles.main}>
+      <main style={isMobile ? styles.mainMobile : {
+        ...styles.main,
+        ...(sidebarCollapsed ? { marginLeft: 0, paddingLeft: 70 } : {})
+      }}>
         {/* 通知 */}
         {notification && (
           <div style={{
