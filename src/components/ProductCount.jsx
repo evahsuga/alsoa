@@ -16,8 +16,12 @@ function ProductCount({ sales }) {
   const [selectedCategory, setSelectedCategory] = useState('QS');
 
   const categories = {
-    QS: { name: 'クイーンシルバー（せっけん）', target: PRODUCT_TARGETS.QS },
-    L: { name: 'ローション', target: PRODUCT_TARGETS.L }
+    QS: { name: 'クイーンシルバー（せっけん）', target: PRODUCT_TARGETS.QS, color: '#10b981' },
+    P: { name: 'パック', target: PRODUCT_TARGETS.P, color: '#8b5cf6' },
+    L: { name: 'ローション', target: PRODUCT_TARGETS.L, color: '#3b82f6' },
+    MO: { name: 'メイクオフ', target: PRODUCT_TARGETS.MO, color: '#f59e0b' },
+    SP: { name: '下地SP', target: PRODUCT_TARGETS.SP, color: '#ec4899' },
+    MP: { name: '下地MP', target: PRODUCT_TARGETS.MP, color: '#06b6d4' }
   };
 
   /**
@@ -28,12 +32,20 @@ function ProductCount({ sales }) {
     if (!category) return [];
     // QS直接購入
     if (category === 'QS' || category === 'QS(PF') return ['QS'];
+    // P直接購入（パック）
+    if (category === 'P') return ['P'];
     // L直接購入
     if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
-    // セット3（QS, L に各+1）
-    if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'L'];
-    // ベスト4（QS, L に各+1）
-    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'L'];
+    // MO直接購入（メイクオフ）
+    if (category === 'MO') return ['MO'];
+    // SP直接購入（下地SP）
+    if (category === '下地SP') return ['SP'];
+    // MP直接購入（下地MP）
+    if (category === '下地MP') return ['MP'];
+    // セット3（QS, P, L に各+1）
+    if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'P', 'L'];
+    // ベスト4（QS, P, L に各+1）※ESはカウント対象外
+    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'P', 'L'];
     return [];
   };
 
@@ -65,21 +77,26 @@ function ProductCount({ sales }) {
 
   const purchasers = getPurchasers();
   const target = categories[selectedCategory]?.target || 100;
-  const progress = Math.min(100, (purchasers.length / target) * 100);
+  const progress = (purchasers.length / target) * 100;
+  const isCompleted = purchasers.length >= target;
 
-  const gridSize = target;
+  // 目標超過時は実績数分のグリッドを表示
+  const gridSize = Math.max(target, purchasers.length);
   const grid = Array.from({ length: gridSize }, (_, i) => purchasers[i] || null);
 
   /**
    * PDF出力
    */
   const handlePrint = () => {
-    const gridCells = grid.map((purchaser, index) => `
-      <div class="count-cell ${purchaser ? 'filled' : ''}">
-        <div class="num">${index + 1}</div>
-        ${purchaser ? `<div class="name">${purchaser.name}</div>` : ''}
-      </div>
-    `).join('');
+    const gridCells = grid.map((purchaser, index) => {
+      const isOverTarget = index >= target;
+      return `
+        <div class="count-cell ${purchaser ? 'filled' : ''}" style="${isOverTarget && purchaser ? 'background-color:#fef3c7;border:2px solid #f59e0b;' : ''}">
+          <div class="num">${index + 1}</div>
+          ${purchaser ? `<div class="name">${purchaser.name}</div>` : ''}
+        </div>
+      `;
+    }).join('');
 
     const content = `
       <div class="print-header">
@@ -87,7 +104,7 @@ function ProductCount({ sales }) {
         <div class="subtitle">${selectedYear}年度（${selectedYear}年3月〜${selectedYear + 1}年2月）　出力日: ${new Date().toLocaleDateString('ja-JP')}</div>
       </div>
       <div class="section">
-        <div class="section-title">${categories[selectedCategory]?.name}</div>
+        <div class="section-title">${categories[selectedCategory]?.name}${isCompleted ? ' 🎉 目標達成！' : ''}</div>
         <div class="summary-grid" style="grid-template-columns: repeat(3, 1fr);">
           <div class="summary-item">
             <div class="label">目標</div>
@@ -99,7 +116,7 @@ function ProductCount({ sales }) {
           </div>
           <div class="summary-item">
             <div class="label">達成率</div>
-            <div class="value">${Math.round(progress)}%</div>
+            <div class="value" style="${isCompleted ? 'color:#10b981;' : ''}">${Math.round(progress)}%</div>
           </div>
         </div>
       </div>
@@ -135,7 +152,11 @@ function ProductCount({ sales }) {
             style={styles.filterSelect}
           >
             <option value="QS">クイーンシルバー（目標{PRODUCT_TARGETS.QS}個）</option>
+            <option value="P">パック（目標{PRODUCT_TARGETS.P}個）</option>
             <option value="L">ローション（目標{PRODUCT_TARGETS.L}個）</option>
+            <option value="MO">メイクオフ（目標{PRODUCT_TARGETS.MO}個）</option>
+            <option value="SP">下地SP（目標{PRODUCT_TARGETS.SP}個）</option>
+            <option value="MP">下地MP（目標{PRODUCT_TARGETS.MP}個）</option>
           </select>
         </div>
         <button onClick={handlePrint} style={styles.printButton}>
@@ -152,31 +173,46 @@ function ProductCount({ sales }) {
         <div style={styles.largeProgressBar}>
           <div style={{
             ...styles.progressFill,
-            width: `${progress}%`,
-            backgroundColor: selectedCategory === 'QS' ? '#10b981' : '#3b82f6'
+            width: `${Math.min(100, progress)}%`,
+            backgroundColor: categories[selectedCategory]?.color || '#3b82f6'
           }}></div>
         </div>
-        <div style={styles.progressPercent}>達成率: {Math.round(progress)}%</div>
+        <div style={{
+          ...styles.progressPercent,
+          color: isCompleted ? '#10b981' : undefined,
+          fontWeight: isCompleted ? 'bold' : undefined
+        }}>
+          達成率: {Math.round(progress)}%{isCompleted && ' 🎉 目標達成！'}
+        </div>
       </div>
 
       {/* カウントグリッド */}
       <div style={styles.countGrid}>
-        {grid.map((purchaser, index) => (
-          <div
-            key={index}
-            style={{
-              ...styles.countCell,
-              backgroundColor: purchaser ? (selectedCategory === 'QS' ? '#dcfce7' : '#dbeafe') : '#f9fafb',
-              borderColor: purchaser ? (selectedCategory === 'QS' ? '#10b981' : '#3b82f6') : '#e5e7eb'
-            }}
-            title={purchaser ? `${purchaser.name} (${purchaser.date})` : ''}
-          >
-            <span style={styles.cellNumber}>{index + 1}</span>
-            {purchaser && (
-              <span style={styles.cellName}>{purchaser.name}</span>
-            )}
-          </div>
-        ))}
+        {grid.map((purchaser, index) => {
+          const categoryColor = categories[selectedCategory]?.color || '#3b82f6';
+          const isOverTarget = index >= target;
+          return (
+            <div
+              key={index}
+              style={{
+                ...styles.countCell,
+                backgroundColor: purchaser
+                  ? (isOverTarget ? '#fef3c7' : `${categoryColor}20`)
+                  : '#f9fafb',
+                borderColor: purchaser
+                  ? (isOverTarget ? '#f59e0b' : categoryColor)
+                  : '#e5e7eb',
+                borderWidth: isOverTarget && purchaser ? 2 : 1
+              }}
+              title={purchaser ? `${purchaser.name} (${purchaser.date})` : ''}
+            >
+              <span style={styles.cellNumber}>{index + 1}</span>
+              {purchaser && (
+                <span style={styles.cellName}>{purchaser.name}</span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

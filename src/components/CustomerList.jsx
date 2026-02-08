@@ -28,8 +28,12 @@ function CustomerList({ customers, sales, updateCustomer }) {
     if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
     // MOグループ（メイクオフ）
     if (category === 'MO') return ['MO'];
-    // SPグループ（下地系）
-    if (category === '下地NP' || category === '下地SP' || category === '下地MP') return ['SP'];
+    // SPグループ（下地SP）
+    if (category === '下地SP') return ['SP'];
+    // MPグループ（下地MP）
+    if (category === '下地MP') return ['MP'];
+    // 酵素グループ
+    if (category === '酵素' || category === '酵素+R' || category === '酵素+L' || category === '酵素G') return ['酵素'];
     // セット3（QS, P, L に各+1）
     if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'P', 'L'];
     // ベスト4（QS, P, L, other に各+1）※ESはotherに計上
@@ -50,7 +54,7 @@ function CustomerList({ customers, sales, updateCustomer }) {
     const monthlyPurchases = {};
     FISCAL_MONTHS.forEach(m => monthlyPurchases[m] = []);
 
-    const categoryCounts = { QS: 0, P: 0, L: 0, MO: 0, SP: 0, other: 0 };
+    const categoryCounts = { QS: 0, P: 0, L: 0, MO: 0, SP: 0, MP: 0, 酵素: 0, other: 0 };
     let totalAmount = 0;
 
     customerSales.forEach(sale => {
@@ -58,7 +62,9 @@ function CustomerList({ customers, sales, updateCustomer }) {
       sale.items.forEach(item => {
         if (monthlyPurchases[month]) {
           const abbrev = item.category || 'other';
-          monthlyPurchases[month].push(abbrev);
+          // 複数購入時は「略称×数量」形式で表示
+          const display = item.quantity > 1 ? `${abbrev}×${item.quantity}` : abbrev;
+          monthlyPurchases[month].push(display);
         }
         // 集計用グループにマッピングしてカウント（複数グループ対応）
         const groups = getCategoryGroup(item.category);
@@ -82,6 +88,22 @@ function CustomerList({ customers, sales, updateCustomer }) {
   );
 
   /**
+   * 略称集計の合計を計算
+   */
+  const getTotals = () => {
+    const totals = { QS: 0, P: 0, L: 0, MO: 0, SP: 0, MP: 0, 酵素: 0, other: 0 };
+    filteredCustomers.forEach(customer => {
+      const salesData = getCustomerSales(customer.name);
+      Object.keys(totals).forEach(key => {
+        totals[key] += salesData.categoryCounts[key] || 0;
+      });
+    });
+    return totals;
+  };
+
+  const totals = getTotals();
+
+  /**
    * PDF出力
    */
   const handlePrint = () => {
@@ -99,9 +121,16 @@ function CustomerList({ customers, sales, updateCustomer }) {
           <td class="text-center">${salesData.categoryCounts.L || '-'}</td>
           <td class="text-center">${salesData.categoryCounts.MO || '-'}</td>
           <td class="text-center">${salesData.categoryCounts.SP || '-'}</td>
-          ${FISCAL_MONTHS.map(month =>
-            `<td class="text-center" style="font-size:7pt;">${salesData.monthlyPurchases[month]?.join(',') || '-'}</td>`
-          ).join('')}
+          <td class="text-center">${salesData.categoryCounts.MP || '-'}</td>
+          <td class="text-center">${salesData.categoryCounts.酵素 || '-'}</td>
+          <td class="text-center">${salesData.categoryCounts.other || '-'}</td>
+          ${FISCAL_MONTHS.map(month => {
+            const purchases = salesData.monthlyPurchases[month];
+            const content = purchases?.length > 0
+              ? purchases.map(abbrev => `<span style="white-space:nowrap;">${abbrev}</span>`).join(',')
+              : '-';
+            return `<td class="text-center" style="font-size:7pt;">${content}</td>`;
+          }).join('')}
         </tr>
       `;
     }).join('');
@@ -124,11 +153,26 @@ function CustomerList({ customers, sales, updateCustomer }) {
             <th style="width:30px;">L</th>
             <th style="width:30px;">MO</th>
             <th style="width:30px;">SP</th>
+            <th style="width:30px;">MP</th>
+            <th style="width:30px;">酵素</th>
+            <th style="width:35px;">other</th>
             ${FISCAL_MONTHS.map(m => `<th style="width:45px;">${m}月</th>`).join('')}
           </tr>
         </thead>
         <tbody>
           ${rows}
+          <tr style="background-color:#f0f0f0;font-weight:bold;">
+            <td colspan="5" class="text-center">合計</td>
+            <td class="text-center">${totals.QS}</td>
+            <td class="text-center">${totals.P}</td>
+            <td class="text-center">${totals.L}</td>
+            <td class="text-center">${totals.MO}</td>
+            <td class="text-center">${totals.SP}</td>
+            <td class="text-center">${totals.MP}</td>
+            <td class="text-center">${totals.酵素}</td>
+            <td class="text-center">${totals.other}</td>
+            ${FISCAL_MONTHS.map(() => `<td></td>`).join('')}
+          </tr>
         </tbody>
       </table>
     `;
@@ -211,6 +255,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>L</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>MO</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>SP</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>MP</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>酵素</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 50}}>other</th>
               {FISCAL_MONTHS.map(month => (
                 <th key={month} style={{
@@ -274,6 +320,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.L || '-'}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.MO || '-'}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.SP || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.MP || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.酵素 || '-'}</td>
                   <td style={{...styles.td, width: 50, textAlign: 'center'}}>{salesData.categoryCounts.other || '-'}</td>
                   {FISCAL_MONTHS.map(month => (
                     <td key={month} style={{
@@ -301,6 +349,48 @@ function CustomerList({ customers, sales, updateCustomer }) {
                 </tr>
               );
             })}
+            {/* 集計行 */}
+            <tr style={{ backgroundColor: '#e9ecef', fontWeight: 'bold' }}>
+              <td style={{
+                ...styles.td,
+                position: 'sticky',
+                left: 0,
+                backgroundColor: '#e9ecef',
+                zIndex: 1,
+                width: 40
+              }}></td>
+              <td style={{
+                ...styles.td,
+                position: 'sticky',
+                left: 40,
+                backgroundColor: '#e9ecef',
+                zIndex: 1,
+                width: 50
+              }}></td>
+              <td style={{
+                ...styles.td,
+                position: 'sticky',
+                left: 90,
+                backgroundColor: '#e9ecef',
+                zIndex: 1,
+                minWidth: 100,
+                borderRight: '2px solid #dee2e6',
+                textAlign: 'center'
+              }}>合計</td>
+              <td style={{...styles.td, width: 100, backgroundColor: '#e9ecef'}}></td>
+              <td style={{...styles.td, width: 80, backgroundColor: '#e9ecef'}}></td>
+              <td style={{...styles.td, width: 35, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.QS}</td>
+              <td style={{...styles.td, width: 35, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.P}</td>
+              <td style={{...styles.td, width: 35, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.L}</td>
+              <td style={{...styles.td, width: 35, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.MO}</td>
+              <td style={{...styles.td, width: 35, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.SP}</td>
+              <td style={{...styles.td, width: 35, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.MP}</td>
+              <td style={{...styles.td, width: 35, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.酵素}</td>
+              <td style={{...styles.td, width: 50, textAlign: 'center', backgroundColor: '#e9ecef'}}>{totals.other}</td>
+              {FISCAL_MONTHS.map(month => (
+                <td key={month} style={{...styles.td, backgroundColor: '#e9ecef'}}></td>
+              ))}
+            </tr>
           </tbody>
         </table>
       </div>
