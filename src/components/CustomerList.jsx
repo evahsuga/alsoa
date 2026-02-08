@@ -22,19 +22,19 @@ function CustomerList({ customers, sales, updateCustomer }) {
     if (!category) return ['other'];
     // QSグループ
     if (category === 'QS' || category === 'QS(PF') return ['QS'];
-    // Lグループ（ローション）
-    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
     // Pグループ（パック）
     if (category === 'P') return ['P'];
+    // Lグループ（ローション）
+    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
     // MOグループ（メイクオフ）
     if (category === 'MO') return ['MO'];
     // SPグループ（下地系）
     if (category === '下地NP' || category === '下地SP' || category === '下地MP') return ['SP'];
-    // セット3（QS, L, P に各+1）
-    if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'L', 'P'];
-    // ベスト4（QS, L, P, MO に各+1）
-    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'L', 'P', 'MO'];
-    // その他は全てother
+    // セット3（QS, P, L に各+1）
+    if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'P', 'L'];
+    // ベスト4（QS, P, L, other に各+1）※ESはotherに計上
+    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'P', 'L', 'other'];
+    // その他は全てother（ES含む）
     return ['other'];
   };
 
@@ -50,7 +50,7 @@ function CustomerList({ customers, sales, updateCustomer }) {
     const monthlyPurchases = {};
     FISCAL_MONTHS.forEach(m => monthlyPurchases[m] = []);
 
-    const categoryCounts = { QS: 0, L: 0, P: 0, MO: 0, SP: 0, other: 0 };
+    const categoryCounts = { QS: 0, P: 0, L: 0, MO: 0, SP: 0, other: 0 };
     let totalAmount = 0;
 
     customerSales.forEach(sale => {
@@ -95,8 +95,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
           <td class="text-right">¥${salesData.totalAmount.toLocaleString()}</td>
           <td class="text-right">¥${salesData.monthlyAverage.toLocaleString()}</td>
           <td class="text-center">${salesData.categoryCounts.QS || '-'}</td>
-          <td class="text-center">${salesData.categoryCounts.L || '-'}</td>
           <td class="text-center">${salesData.categoryCounts.P || '-'}</td>
+          <td class="text-center">${salesData.categoryCounts.L || '-'}</td>
           <td class="text-center">${salesData.categoryCounts.MO || '-'}</td>
           <td class="text-center">${salesData.categoryCounts.SP || '-'}</td>
           ${FISCAL_MONTHS.map(month =>
@@ -120,8 +120,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
             <th style="width:80px;">年間購入</th>
             <th style="width:65px;">月平均</th>
             <th style="width:30px;">QS</th>
-            <th style="width:30px;">L</th>
             <th style="width:30px;">P</th>
+            <th style="width:30px;">L</th>
             <th style="width:30px;">MO</th>
             <th style="width:30px;">SP</th>
             ${FISCAL_MONTHS.map(m => `<th style="width:45px;">${m}月</th>`).join('')}
@@ -207,8 +207,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 100}}>年間購入</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 80}}>月平均</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>QS</th>
-              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>L</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>P</th>
+              <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>L</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>MO</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 35}}>SP</th>
               <th style={{...styles.th, position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 2, width: 50}}>other</th>
@@ -270,8 +270,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
                   <td style={{...styles.td, width: 100, textAlign: 'right'}}>¥{salesData.totalAmount.toLocaleString()}</td>
                   <td style={{...styles.td, width: 80, textAlign: 'right'}}>¥{salesData.monthlyAverage.toLocaleString()}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.QS || '-'}</td>
-                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.L || '-'}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.P || '-'}</td>
+                  <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.L || '-'}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.MO || '-'}</td>
                   <td style={{...styles.td, width: 35, textAlign: 'center'}}>{salesData.categoryCounts.SP || '-'}</td>
                   <td style={{...styles.td, width: 50, textAlign: 'center'}}>{salesData.categoryCounts.other || '-'}</td>

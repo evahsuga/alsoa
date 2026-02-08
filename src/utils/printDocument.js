@@ -190,9 +190,9 @@ export const generateCustomerListHTML = ({
         <td class="text-right">¥${salesData.totalAmount.toLocaleString()}</td>
         <td class="text-right">¥${salesData.monthlyAverage.toLocaleString()}</td>
         <td class="text-center">${salesData.categoryCounts.QS || '-'}</td>
-        <td class="text-center">${salesData.categoryCounts.L || '-'}</td>
         <td class="text-center">${salesData.categoryCounts.P || '-'}</td>
-        <td class="text-center">${salesData.categoryCounts.ES || '-'}</td>
+        <td class="text-center">${salesData.categoryCounts.L || '-'}</td>
+        <td class="text-center">${salesData.categoryCounts.MO || '-'}</td>
         ${fiscalMonths.map(m => `<td>${salesData.monthlyPurchases[m]?.join(',') || '-'}</td>`).join('')}
       </tr>
     `;
@@ -212,9 +212,9 @@ export const generateCustomerListHTML = ({
           <th style="width:80px;">年間購入</th>
           <th style="width:65px;">月平均</th>
           <th style="width:30px;">QS</th>
-          <th style="width:30px;">L</th>
           <th style="width:30px;">P</th>
-          <th style="width:30px;">ES</th>
+          <th style="width:30px;">L</th>
+          <th style="width:30px;">MO</th>
           ${fiscalMonths.map(m => `<th style="width:45px;">${m}月</th>`).join('')}
         </tr>
       </thead>

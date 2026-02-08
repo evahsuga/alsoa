@@ -21,6 +21,23 @@ function ProductCount({ sales }) {
   };
 
   /**
+   * カテゴリをカウント対象グループにマッピング
+   * set3/best4の内訳商品も対象に含める
+   */
+  const getCategoryCountGroups = (category) => {
+    if (!category) return [];
+    // QS直接購入
+    if (category === 'QS' || category === 'QS(PF') return ['QS'];
+    // L直接購入
+    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
+    // セット3（QS, L に各+1）
+    if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'L'];
+    // ベスト4（QS, L に各+1）
+    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'L'];
+    return [];
+  };
+
+  /**
    * カテゴリ別の購入者リストを取得
    */
   const getPurchasers = () => {
@@ -29,7 +46,9 @@ function ProductCount({ sales }) {
 
     yearSales.forEach(sale => {
       sale.items.forEach(item => {
-        if (item.category === selectedCategory) {
+        // 直接購入またはセット商品の内訳としてカウント
+        const countGroups = getCategoryCountGroups(item.category);
+        if (countGroups.includes(selectedCategory)) {
           for (let i = 0; i < item.quantity; i++) {
             purchasers.push({
               name: sale.customerName,
