@@ -356,17 +356,19 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
           <div style={styles.reportRow}>
             <label>目標:</label>
             <input
-              type="number"
-              value={report.targetSales}
-              onChange={(e) => setReport({...report, targetSales: parseInt(e.target.value) || 0})}
+              type="text"
+              inputMode="numeric"
+              value={(report.targetSales || 0).toLocaleString()}
+              onChange={(e) => setReport({...report, targetSales: parseInt(e.target.value.replace(/,/g, '')) || 0})}
               style={styles.reportInput}
             />
             <span>円</span>
             <label style={{marginLeft: 20}}>結果:</label>
             <input
-              type="number"
-              value={report.resultSales}
-              onChange={(e) => setReport({...report, resultSales: parseInt(e.target.value) || 0})}
+              type="text"
+              inputMode="numeric"
+              value={(report.resultSales || 0).toLocaleString()}
+              onChange={(e) => setReport({...report, resultSales: parseInt(e.target.value.replace(/,/g, '')) || 0})}
               style={styles.reportInput}
             />
             <span>円</span>
@@ -436,17 +438,19 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
           <div style={styles.reportRow}>
             <span>仕入れ:</span>
             <input
-              type="number"
-              value={report.purchase || 0}
-              onChange={(e) => setReport({...report, purchase: parseInt(e.target.value) || 0})}
+              type="text"
+              inputMode="numeric"
+              value={(report.purchase || 0).toLocaleString()}
+              onChange={(e) => setReport({...report, purchase: parseInt(e.target.value.replace(/,/g, '')) || 0})}
               style={styles.reportInput}
             />
             <span>円</span>
             <span style={{marginLeft: 20}}>自分の使用金額:</span>
             <input
-              type="number"
-              value={report.selfUse || 0}
-              onChange={(e) => setReport({...report, selfUse: parseInt(e.target.value) || 0})}
+              type="text"
+              inputMode="numeric"
+              value={(report.selfUse || 0).toLocaleString()}
+              onChange={(e) => setReport({...report, selfUse: parseInt(e.target.value.replace(/,/g, '')) || 0})}
               style={styles.reportInput}
             />
             <span>円</span>
