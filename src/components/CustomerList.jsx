@@ -17,15 +17,25 @@ function CustomerList({ customers, sales, updateCustomer }) {
 
   /**
    * 略称を集計用グループにマッピング
+   *
+   * 計上ルール:
+   * - QS: 'QS', 'QS(PF' で始まるカテゴリ + セット商品
+   * - P: 'P' + セット商品
+   * - L: 'LI', 'LII', 'Lｾﾙ' + セット商品
+   * - MO: 'MO' + B4系セット商品
+   * - SP: '下地SP'
+   * - MP: '下地MP'
+   * - 酵素: '酵素', '酵素+R', '酵素+L', '酵素G'
+   * - other: 上記以外（ES含む）
    */
   const getCategoryGroup = (category) => {
     if (!category) return ['other'];
-    // QSグループ
-    if (category === 'QS' || category === 'QS(PF') return ['QS'];
+    // QSグループ（'QS' または 'QS(' で始まるカテゴリ）
+    if (category === 'QS' || category.startsWith('QS(')) return ['QS'];
     // Pグループ（パック）
     if (category === 'P') return ['P'];
-    // Lグループ（ローション）
-    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
+    // Lグループ（ローション: LI, LII, Lｾﾙ）
+    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ') return ['L'];
     // MOグループ（メイクオフ）
     if (category === 'MO') return ['MO'];
     // SPグループ（下地SP）
@@ -36,8 +46,8 @@ function CustomerList({ customers, sales, updateCustomer }) {
     if (category === '酵素' || category === '酵素+R' || category === '酵素+L' || category === '酵素G') return ['酵素'];
     // セット3（QS, P, L に各+1）
     if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'P', 'L'];
-    // ベスト4（QS, P, L, other に各+1）※ESはotherに計上
-    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'P', 'L', 'other'];
+    // ベスト4（QS, P, L, MO に各+1）※ESはカウント対象外
+    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'P', 'L', 'MO'];
     // その他は全てother（ES含む）
     return ['other'];
   };
@@ -89,10 +99,14 @@ function CustomerList({ customers, sales, updateCustomer }) {
 
   /**
    * 略称集計の合計を計算
+   * ※アプリ利用者は合計から除外
    */
   const getTotals = () => {
     const totals = { QS: 0, P: 0, L: 0, MO: 0, SP: 0, MP: 0, 酵素: 0, other: 0 };
     filteredCustomers.forEach(customer => {
+      // アプリ利用者は合計から除外
+      if (customer.isAppUser) return;
+
       const salesData = getCustomerSales(customer.name);
       Object.keys(totals).forEach(key => {
         totals[key] += salesData.categoryCounts[key] || 0;
@@ -274,21 +288,28 @@ function CustomerList({ customers, sales, updateCustomer }) {
           <tbody>
             {filteredCustomers.map((customer, index) => {
               const salesData = getCustomerSales(customer.name);
+              const isAppUser = customer.isAppUser || false;
+              // アプリ利用者は背景色を変えて区別
+              const rowBgColor = isAppUser ? '#f0f7ff' : '#fff';
+
               return (
-                <tr key={customer.id}>
+                <tr key={customer.id} style={{ backgroundColor: isAppUser ? '#f0f7ff' : undefined }}>
                   <td style={{
                     ...styles.td,
                     position: 'sticky',
                     left: 0,
-                    backgroundColor: '#fff',
+                    backgroundColor: rowBgColor,
                     zIndex: 1,
                     width: 40
-                  }}>{index + 1}</td>
+                  }}>
+                    {index + 1}
+                    {isAppUser && <span title="アプリ利用者" style={{ marginLeft: 4, color: '#3b82f6' }}>★</span>}
+                  </td>
                   <td style={{
                     ...styles.td,
                     position: 'sticky',
                     left: 40,
-                    backgroundColor: '#fff',
+                    backgroundColor: rowBgColor,
                     zIndex: 1,
                     width: 50
                   }}>
@@ -307,7 +328,7 @@ function CustomerList({ customers, sales, updateCustomer }) {
                     ...styles.td,
                     position: 'sticky',
                     left: 90,
-                    backgroundColor: '#fff',
+                    backgroundColor: rowBgColor,
                     zIndex: 1,
                     minWidth: 100,
                     borderRight: '2px solid #dee2e6',

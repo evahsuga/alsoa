@@ -27,15 +27,23 @@ function ProductCount({ sales }) {
   /**
    * カテゴリをカウント対象グループにマッピング
    * set3/best4の内訳商品も対象に含める
+   *
+   * 計上ルール:
+   * - QS: 'QS', 'QS(PF' で始まるカテゴリ + セット商品
+   * - P: 'P' + セット商品
+   * - L: 'LI', 'LII', 'Lｾﾙ' + セット商品
+   * - MO: 'MO' + B4系セット商品
+   * - SP: '下地SP'
+   * - MP: '下地MP'
    */
   const getCategoryCountGroups = (category) => {
     if (!category) return [];
-    // QS直接購入
-    if (category === 'QS' || category === 'QS(PF') return ['QS'];
+    // QS直接購入（'QS' または 'QS(' で始まるカテゴリ）
+    if (category === 'QS' || category.startsWith('QS(')) return ['QS'];
     // P直接購入（パック）
     if (category === 'P') return ['P'];
-    // L直接購入
-    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ' || category === 'L') return ['L'];
+    // L直接購入（ローション: LI, LII, Lｾﾙ）
+    if (category === 'LI' || category === 'LII' || category === 'Lｾﾙ') return ['L'];
     // MO直接購入（メイクオフ）
     if (category === 'MO') return ['MO'];
     // SP直接購入（下地SP）
@@ -44,8 +52,8 @@ function ProductCount({ sales }) {
     if (category === '下地MP') return ['MP'];
     // セット3（QS, P, L に各+1）
     if (category === 'set3Ⅰ' || category === 'set3Ⅱ' || category === 'set3ｾﾙ') return ['QS', 'P', 'L'];
-    // ベスト4（QS, P, L に各+1）※ESはカウント対象外
-    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'P', 'L'];
+    // ベスト4（QS, P, L, MO に各+1）
+    if (category === 'B4Ⅰ' || category === 'B4Ⅱ' || category === 'B4ｾﾙ') return ['QS', 'P', 'L', 'MO'];
     return [];
   };
 

@@ -15,10 +15,67 @@ function YearlyReport({ monthlyReports, customers, sales }) {
   const [selectedYear, setSelectedYear] = useState(getFiscalYear(new Date()));
 
   /**
+   * 顧客ごとの初回購入月を取得
+   * @returns {Map<string, {year: number, month: number}>} 顧客名 → 初回購入年月
+   */
+  const getCustomerFirstPurchase = () => {
+    const firstPurchaseMap = new Map();
+
+    // 全売上データを日付順にソート
+    const sortedSales = [...sales].sort((a, b) =>
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    sortedSales.forEach(sale => {
+      const customerName = sale.customerName;
+      // まだ初回購入が記録されていない顧客のみ記録
+      if (!firstPurchaseMap.has(customerName)) {
+        const d = new Date(sale.date);
+        firstPurchaseMap.set(customerName, {
+          year: d.getFullYear(),
+          month: d.getMonth() + 1
+        });
+      }
+    });
+
+    return firstPurchaseMap;
+  };
+
+  /**
+   * 指定月時点での累計顧客数を取得
+   * @param {number} targetYear - 対象年
+   * @param {number} targetMonth - 対象月
+   * @param {Map} firstPurchaseMap - 顧客の初回購入月マップ
+   * @returns {number} 累計顧客数
+   */
+  const getCumulativeCustomerCount = (targetYear, targetMonth, firstPurchaseMap) => {
+    let count = 0;
+
+    // アプリ利用者を除いた顧客のみカウント
+    const regularCustomers = customers.filter(c => !c.isAppUser);
+
+    regularCustomers.forEach(customer => {
+      const firstPurchase = firstPurchaseMap.get(customer.name);
+      if (!firstPurchase) return; // 購入履歴がない顧客はカウントしない
+
+      // 初回購入が対象月以前かどうか判定
+      const firstDate = new Date(firstPurchase.year, firstPurchase.month - 1, 1);
+      const targetDate = new Date(targetYear, targetMonth - 1, 28); // 月末
+
+      if (firstDate <= targetDate) {
+        count++;
+      }
+    });
+
+    return count;
+  };
+
+  /**
    * 年間データを取得
    */
   const getYearlyData = () => {
     const data = [];
+    const firstPurchaseMap = getCustomerFirstPurchase();
 
     FISCAL_MONTHS.forEach(month => {
       const year = month >= 3 ? selectedYear : selectedYear + 1;
@@ -39,6 +96,9 @@ function YearlyReport({ monthlyReports, customers, sales }) {
 
       monthSales.forEach(sale => {
         const customer = customers.find(c => c.name === sale.customerName);
+        // アプリ利用者は集計から除外
+        if (customer?.isAppUser) return;
+
         const rank = customer?.rank || 'C';
         sale.items.forEach(item => {
           if (rankData[rank]) {
@@ -52,12 +112,15 @@ function YearlyReport({ monthlyReports, customers, sales }) {
         rankData[rank].count = customerSet[rank].size;
       });
 
+      // 月別累計顧客数を計算
+      const cumulativeCustomers = getCumulativeCustomerCount(year, month, firstPurchaseMap);
+
       data.push({
         month,
         year,
         report,
         rankData,
-        totalCustomers: customers.length,
+        totalCustomers: cumulativeCustomers,
         totalSales: Object.values(rankData).reduce((sum, r) => sum + r.amount, 0)
       });
     });

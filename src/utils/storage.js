@@ -33,7 +33,12 @@ export const DEFAULT_VALUES = {
  */
 export const loadAllData = () => {
   try {
-    const customers = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS)) || DEFAULT_VALUES.customers;
+    const rawCustomers = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS)) || DEFAULT_VALUES.customers;
+    // 既存データにisAppUserがない場合はfalseを設定（後方互換性）
+    const customers = rawCustomers.map(c => ({
+      ...c,
+      isAppUser: c.isAppUser || false
+    }));
     const sales = JSON.parse(localStorage.getItem(STORAGE_KEYS.SALES)) || DEFAULT_VALUES.sales;
     const monthlyReports = JSON.parse(localStorage.getItem(STORAGE_KEYS.MONTHLY_REPORTS)) || DEFAULT_VALUES.monthlyReports;
     const customProducts = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_PRODUCTS)) || DEFAULT_VALUES.customProducts;
@@ -136,8 +141,15 @@ export const importBackup = (file) => {
           throw new Error('無効なファイル形式です');
         }
 
+        // 既存データにisAppUserがない場合はfalseを設定（後方互換性）
+        const rawCustomers = data.customers || DEFAULT_VALUES.customers;
+        const customers = rawCustomers.map(c => ({
+          ...c,
+          isAppUser: c.isAppUser || false
+        }));
+
         const importedData = {
-          customers: data.customers || DEFAULT_VALUES.customers,
+          customers: customers,
           sales: data.sales || DEFAULT_VALUES.sales,
           monthlyReports: data.monthlyReports || DEFAULT_VALUES.monthlyReports,
           customProducts: data.customProducts || DEFAULT_VALUES.customProducts,

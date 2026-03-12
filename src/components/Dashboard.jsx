@@ -5,7 +5,7 @@
  * 売上概要、顧客数、年間目標達成率を表示
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { styles } from '../styles/styles';
 import { getFiscalYear } from '../utils/productUtils';
 import { PRODUCT_TARGETS } from '../data/productMaster';
@@ -14,7 +14,7 @@ function Dashboard({ customers, sales, monthlyReports }) {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
-  const fiscalYear = getFiscalYear(currentDate);
+  const [selectedYear, setSelectedYear] = useState(getFiscalYear(currentDate));
 
   // 今月の売上を取得
   const currentMonthSales = sales.filter(s => {
@@ -22,13 +22,16 @@ function Dashboard({ customers, sales, monthlyReports }) {
     return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
   });
 
-  // 今月の売上合計
-  const totalSalesAmount = currentMonthSales.reduce((sum, s) =>
-    sum + s.items.reduce((itemSum, item) => itemSum + (item.price * item.quantity), 0), 0
-  );
+  // 今月の売上合計（アプリ利用者を除外）
+  const totalSalesAmount = currentMonthSales.reduce((sum, s) => {
+    const customer = customers.find(c => c.name === s.customerName);
+    // アプリ利用者の売上は除外
+    if (customer?.isAppUser) return sum;
+    return sum + s.items.reduce((itemSum, item) => itemSum + (item.price * item.quantity), 0);
+  }, 0);
 
-  // 会計年度の売上を取得
-  const fiscalYearSales = sales.filter(s => getFiscalYear(new Date(s.date)) === fiscalYear);
+  // 選択した会計年度の売上を取得
+  const fiscalYearSales = sales.filter(s => getFiscalYear(new Date(s.date)) === selectedYear);
 
   /**
    * カテゴリをカウント対象グループにマッピング
@@ -60,10 +63,13 @@ function Dashboard({ customers, sales, monthlyReports }) {
     });
   });
 
-  // 顧客ランク別カウントと購入金額
+  // 顧客ランク別カウントと購入金額（アプリ利用者を除外）
   const rankData = { A: { count: 0, amount: 0 }, B: { count: 0, amount: 0 }, C: { count: 0, amount: 0 }, D: { count: 0, amount: 0 } };
 
-  customers.forEach(c => {
+  // アプリ利用者を除いた顧客数
+  const regularCustomers = customers.filter(c => !c.isAppUser);
+
+  regularCustomers.forEach(c => {
     if (rankData[c.rank] !== undefined) {
       rankData[c.rank].count++;
       // その顧客の年間購入金額を計算
@@ -83,6 +89,21 @@ function Dashboard({ customers, sales, monthlyReports }) {
   return (
     <div style={styles.viewContainer}>
       <h1 style={styles.viewTitle}>ダッシュボード</h1>
+
+      <div style={styles.filterBar}>
+        <div style={styles.filterGroup}>
+          <label>年度:</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            style={styles.filterSelect}
+          >
+            {[2024, 2025, 2026, 2027].map(year => (
+              <option key={year} value={year}>{year}年度</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div style={styles.cardGrid}>
         {/* 今月の売上 */}
@@ -210,7 +231,7 @@ function Dashboard({ customers, sales, monthlyReports }) {
 
       {/* 顧客ランク別集計 */}
       <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>顧客ランク別集計（{fiscalYear}年度）</h2>
+        <h2 style={styles.sectionTitle}>顧客ランク別集計（{selectedYear}年度）</h2>
         <div style={styles.tableContainer}>
           <table style={styles.table}>
             <thead>
@@ -228,7 +249,7 @@ function Dashboard({ customers, sales, monthlyReports }) {
             <tbody>
               <tr>
                 <td style={{...styles.td, fontWeight: 'bold'}}>人数</td>
-                <td style={{...styles.td, textAlign: 'center'}}>{customers.length}人</td>
+                <td style={{...styles.td, textAlign: 'center'}}>{regularCustomers.length}人</td>
                 <td style={{...styles.td, textAlign: 'center'}}>{rankData.A.count}人</td>
                 <td style={{...styles.td, textAlign: 'center'}}>{rankData.B.count}人</td>
                 <td style={{...styles.td, textAlign: 'center'}}>{rankData.C.count}人</td>

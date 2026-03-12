@@ -73,6 +73,18 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
 
   /**
    * 売上データから自動集計
+   *
+   * 計上ルール:
+   * - アプリ利用者の売上 → selfUse（自分の使用金額）に計上
+   * - 通常顧客の売上 → resultSales（月間売上）に計上
+   * - 3ステップ実売数は両方含める（目標カウント用）
+   *
+   * 3ステップ実売数の計上ルール:
+   * - QS: 'QS', 'QS(PF' + セット商品(set3系, B4系)
+   * - パック: 'P' + セット商品(set3系, B4系)
+   * - ローション: 'LI', 'LII', 'Lｾﾙ' + セット商品(set3系, B4系)
+   * - MO: 'MO' + セット商品(B4系のみ)
+   * - SP: '下地SP'
    */
   const autoCalculate = () => {
     const monthSales = sales.filter(s => {
@@ -81,28 +93,84 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
     });
 
     let totalSales = 0;
+    let selfUseSales = 0;  // アプリ利用者の売上（自分の使用金額）
     let qsCount = 0, packCount = 0, lotionCount = 0, moCount = 0, spCount = 0;
 
+    // セット商品の定義
+    const SET3_CATEGORIES = ['set3Ⅰ', 'set3Ⅱ', 'set3ｾﾙ'];
+    const B4_CATEGORIES = ['B4Ⅰ', 'B4Ⅱ', 'B4ｾﾙ'];
+
     monthSales.forEach(sale => {
+      // 顧客を検索してアプリ利用者かどうか判定
+      const customer = customers.find(c => c.name === sale.customerName);
+      const isAppUser = customer?.isAppUser || false;
+
       sale.items.forEach(item => {
-        totalSales += item.price * item.quantity;
-        if (item.category === 'QS') qsCount += item.quantity;
-        if (item.category === 'P') packCount += item.quantity;
-        if (item.category === 'L') lotionCount += item.quantity;
-        if (item.category === 'MO') moCount += item.quantity;
-        if (item.category === 'SP') spCount += item.quantity;
+        const cat = item.category;
+        const qty = item.quantity;
+        const amount = item.price * qty;
+
+        // 売上金額の振り分け
+        if (isAppUser) {
+          selfUseSales += amount;  // アプリ利用者 → 自分の使用金額
+        } else {
+          totalSales += amount;    // 通常顧客 → 月間売上
+        }
+
+        // 3ステップ実売数は両方含める（目標カウント用）
+        // QS: 'QS' または 'QS(PF' で始まるカテゴリ
+        if (cat === 'QS' || cat.startsWith('QS(')) {
+          qsCount += qty;
+        }
+
+        // パック: 'P' カテゴリ
+        if (cat === 'P') {
+          packCount += qty;
+        }
+
+        // ローション: 'LI', 'LII', 'Lｾﾙ' カテゴリ
+        if (cat === 'LI' || cat === 'LII' || cat === 'Lｾﾙ') {
+          lotionCount += qty;
+        }
+
+        // MO: 'MO' カテゴリ
+        if (cat === 'MO') {
+          moCount += qty;
+        }
+
+        // SP: '下地SP' カテゴリ
+        if (cat === '下地SP') {
+          spCount += qty;
+        }
+
+        // セット3商品: QS + P + L を各1個ずつ計上
+        if (SET3_CATEGORIES.includes(cat)) {
+          qsCount += qty;
+          packCount += qty;
+          lotionCount += qty;
+        }
+
+        // ベスト4商品: QS + P + L + MO を各1個ずつ計上
+        if (B4_CATEGORIES.includes(cat)) {
+          qsCount += qty;
+          packCount += qty;
+          lotionCount += qty;
+          moCount += qty;
+        }
       });
     });
 
     setReport({
       ...report,
       resultSales: totalSales,
+      selfUse: selfUseSales,  // 自動計上
       threeStepSales: { qs: qsCount, pack: packCount, lotion: lotionCount, mo: moCount, sp: spCount }
     });
   };
 
   /**
    * ランク別集計を計算
+   * ※アプリ利用者は集計から除外
    */
   const getRankSummary = () => {
     const monthSales = sales.filter(s => {
@@ -120,6 +188,9 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
 
     monthSales.forEach(sale => {
       const customer = customers.find(c => c.name === sale.customerName);
+      // アプリ利用者は集計から除外
+      if (customer?.isAppUser) return;
+
       const rank = customer?.rank || 'C';
       sale.items.forEach(item => {
         if (rankData[rank]) {

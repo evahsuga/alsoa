@@ -20,7 +20,7 @@ function MasterManagement({
   deleteCustomProduct
 }) {
   const [activeTab, setActiveTab] = useState('customers');
-  const [newCustomer, setNewCustomer] = useState({ name: '', rank: 'C' });
+  const [newCustomer, setNewCustomer] = useState({ name: '', rank: 'C', isAppUser: false });
   const [newProduct, setNewProduct] = useState({
     categoryKey: 'skincare',
     code: '',
@@ -55,7 +55,7 @@ function MasterManagement({
       return;
     }
     addCustomer(newCustomer);
-    setNewCustomer({ name: '', rank: 'C' });
+    setNewCustomer({ name: '', rank: 'C', isAppUser: false });
   };
 
   /**
@@ -168,6 +168,21 @@ function MasterManagement({
                 <option value="C">Cランク</option>
                 <option value="D">Dランク</option>
               </select>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                marginLeft: 10,
+                cursor: 'pointer',
+                fontSize: 14
+              }}>
+                <input
+                  type="checkbox"
+                  checked={newCustomer.isAppUser}
+                  onChange={(e) => setNewCustomer({...newCustomer, isAppUser: e.target.checked})}
+                />
+                アプリ利用者
+              </label>
               <button onClick={handleAddCustomer} style={styles.addButton}>追加</button>
             </div>
             <div style={styles.csvImport}>
@@ -195,6 +210,7 @@ function MasterManagement({
                   <th style={styles.th}>No</th>
                   <th style={styles.th}>顧客名</th>
                   <th style={styles.th}>ランク</th>
+                  <th style={{...styles.th, width: 80}}>利用者</th>
                   <th style={styles.th}>操作</th>
                 </tr>
               </thead>
@@ -214,6 +230,14 @@ function MasterManagement({
                         <option value="C">C</option>
                         <option value="D">D</option>
                       </select>
+                    </td>
+                    <td style={{...styles.td, textAlign: 'center'}}>
+                      <input
+                        type="checkbox"
+                        checked={customer.isAppUser || false}
+                        onChange={(e) => updateCustomer(customer.id, { isAppUser: e.target.checked })}
+                        style={{ cursor: 'pointer' }}
+                      />
                     </td>
                     <td style={styles.td}>
                       <button

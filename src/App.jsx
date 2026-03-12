@@ -311,7 +311,8 @@ function App() {
               newCustomers.push({
                 id: Date.now() + index,
                 name,
-                rank: ['A', 'B', 'C', 'D'].includes(rank) ? rank : 'C'
+                rank: ['A', 'B', 'C', 'D'].includes(rank) ? rank : 'C',
+                isAppUser: false  // インポート時はデフォルトfalse
               });
             }
           }
@@ -424,6 +425,14 @@ function App() {
           <div style={{display: 'flex', alignItems: 'center'}}>
             <span style={styles.logoIcon}>💄</span>
             <span style={styles.logoText}>販売管理</span>
+            <span style={{
+              marginLeft: 8,
+              fontSize: 10,
+              color: '#888',
+              backgroundColor: '#333',
+              padding: '2px 6px',
+              borderRadius: 4
+            }}>ver2.0</span>
           </div>
           {/* PC: サイドバー折りたたみボタン */}
           {!isMobile && (
