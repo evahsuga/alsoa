@@ -8,22 +8,27 @@
 import React, { useState } from 'react';
 import { styles } from '../styles/styles';
 import { getFiscalYear } from '../utils/productUtils';
-import { PRODUCT_TARGETS } from '../data/productMaster';
+import { PRODUCT_TARGETS, FISCAL_MONTHS } from '../data/productMaster';
 
 function Dashboard({ customers, sales, monthlyReports }) {
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
-  const currentYear = currentDate.getFullYear();
   const [selectedYear, setSelectedYear] = useState(getFiscalYear(currentDate));
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
-  // 今月の売上を取得
-  const currentMonthSales = sales.filter(s => {
+  // 選択した月の売上を取得（会計年度に応じて年を調整）
+  const getYearForMonth = (month) => {
+    // 会計年度は3月〜翌2月。3月以降は選択年度、1-2月は選択年度+1
+    return month >= 3 ? selectedYear : selectedYear + 1;
+  };
+
+  const selectedMonthSales = sales.filter(s => {
     const d = new Date(s.date);
-    return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+    return d.getMonth() + 1 === selectedMonth && d.getFullYear() === getYearForMonth(selectedMonth);
   });
 
-  // 今月の売上合計（アプリ利用者を除外）
-  const totalSalesAmount = currentMonthSales.reduce((sum, s) => {
+  // 選択した月の売上合計（アプリ利用者を除外）
+  const totalSalesAmount = selectedMonthSales.reduce((sum, s) => {
     const customer = customers.find(c => c.name === s.customerName);
     // アプリ利用者の売上は除外
     if (customer?.isAppUser) return sum;
@@ -81,8 +86,8 @@ function Dashboard({ customers, sales, monthlyReports }) {
     }
   });
 
-  // 今月のレポートデータ（仕入れ・自分の使用金額）
-  const currentReport = monthlyReports.find(r => r.year === currentYear && r.month === currentMonth);
+  // 選択した月のレポートデータ（仕入れ・自分の使用金額）
+  const currentReport = monthlyReports.find(r => r.year === getYearForMonth(selectedMonth) && r.month === selectedMonth);
   const purchaseAmount = currentReport?.purchase || 0;
   const selfUseAmount = currentReport?.selfUse || 0;
 
@@ -103,20 +108,32 @@ function Dashboard({ customers, sales, monthlyReports }) {
             ))}
           </select>
         </div>
+        <div style={styles.filterGroup}>
+          <label>月:</label>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            style={styles.filterSelect}
+          >
+            {FISCAL_MONTHS.map(month => (
+              <option key={month} value={month}>{month}月</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div style={styles.cardGrid}>
-        {/* 今月の売上 */}
+        {/* 選択月の売上 */}
         <div style={styles.card}>
           <div style={styles.cardHeader}>
             <span style={styles.cardIcon}>💰</span>
-            <span>今月の売上</span>
+            <span>{selectedMonth}月の売上</span>
           </div>
           <div style={styles.cardValue}>
             ¥{totalSalesAmount.toLocaleString()}
           </div>
           <div style={styles.cardSub}>
-            {currentMonthSales.length}件の取引
+            {selectedMonthSales.length}件の取引
           </div>
         </div>
 
