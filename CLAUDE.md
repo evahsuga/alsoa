@@ -6,8 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 化粧品BtoC個人販売者向けの販売管理Webアプリケーション。月末の手書き伝票から5種類の紙書類への転記作業を自動化する。
 
-**本番URL**: https://evahsuga.github.io/alsoa/
-**現行バージョン**: v2.1
+**本番URL (GitHub Pages)**: https://evahsuga.github.io/alsoa/
+**本番URL (サーバー版)**: https://evahpro.xsrv.jp/arsoa/
+**現行バージョン**: v3.0
 
 ## Commands
 

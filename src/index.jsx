@@ -1,6 +1,9 @@
 /**
  * エントリーポイント
- * 化粧品販売管理アプリ - VSCode版
+ * 化粧品販売管理アプリ
+ *
+ * LocalStorage版: import App from './App';
+ * サーバー版:     import App from './App.server';
  */
 
 import React from 'react';

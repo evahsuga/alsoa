@@ -1,0 +1,28 @@
+# ========================================
+# API セキュリティ設定
+# 化粧品販売管理アプリ - サーバー版
+# ========================================
+
+# PHPファイルの直接実行を許可
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# セキュリティヘッダー
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# ディレクトリリスティング無効化
+Options -Indexes
+
+# .htaccessや設定ファイルへのアクセス禁止
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "config\.php$">
+    Require all denied
+</FilesMatch>
