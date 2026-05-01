@@ -10,7 +10,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "build:xserver": "PUBLIC_URL=/arsoa REACT_APP_USE_SERVER=true react-scripts build",
+    "deploy:xserver": "npm run build:xserver && rsync -avz --exclude='api/' build/ xserver-blog:/home/evahpro/evahpro.xsrv.jp/public_html/arsoa/"
   },
   "dependencies": {
     "react": "^18.2.0",

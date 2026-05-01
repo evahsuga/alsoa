@@ -69,10 +69,12 @@ function ProductCount({ sales }) {
         // 直接購入またはセット商品の内訳としてカウント
         const countGroups = getCategoryCountGroups(item.category);
         if (countGroups.includes(selectedCategory)) {
+          const month = new Date(sale.date).getMonth() + 1;
           for (let i = 0; i < item.quantity; i++) {
             purchasers.push({
               name: sale.customerName,
               date: sale.date,
+              month: month,
               product: item.name
             });
           }
@@ -101,7 +103,7 @@ function ProductCount({ sales }) {
       return `
         <div class="count-cell ${purchaser ? 'filled' : ''}" style="${isOverTarget && purchaser ? 'background-color:#fef3c7;border:2px solid #f59e0b;' : ''}">
           <div class="num">${index + 1}</div>
-          ${purchaser ? `<div class="name">${purchaser.name}</div>` : ''}
+          ${purchaser ? `<div class="name">${purchaser.name}</div><div class="month">${purchaser.month}月</div>` : ''}
         </div>
       `;
     }).join('');
@@ -216,7 +218,10 @@ function ProductCount({ sales }) {
             >
               <span style={styles.cellNumber}>{index + 1}</span>
               {purchaser && (
-                <span style={styles.cellName}>{purchaser.name}</span>
+                <>
+                  <span style={styles.cellName}>{purchaser.name}</span>
+                  <span style={{ fontSize: 10, color: '#6b7280', lineHeight: 1.2 }}>{purchaser.month}月</span>
+                </>
               )}
             </div>
           );

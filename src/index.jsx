@@ -1,14 +1,10 @@
-/**
- * エントリーポイント
- * 化粧品販売管理アプリ
- *
- * LocalStorage版: import App from './App';
- * サーバー版:     import App from './App.server';
- */
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+
+// REACT_APP_USE_SERVER=true のビルドはサーバー版（エックスサーバー用）
+const App = process.env.REACT_APP_USE_SERVER === 'true'
+  ? require('./App.server').default
+  : require('./App').default;
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
