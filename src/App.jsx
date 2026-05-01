@@ -2,7 +2,7 @@
  * メインアプリケーションコンポーネント
  * 化粧品販売管理アプリ - VSCode版
  *
- * @version 1.4
+ * @version 2.2
  */
 
 import React, { useState, useEffect } from 'react';

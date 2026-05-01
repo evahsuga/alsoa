@@ -2,7 +2,7 @@
  * メインアプリケーションコンポーネント（サーバー版）
  * 化粧品販売管理アプリ - エックスサーバー対応
  *
- * @version 2.1 Server Edition
+ * @version 2.2 Server Edition
  */
 
 import React, { useState, useEffect } from 'react';
@@ -24,6 +24,7 @@ import CustomerList from './components/CustomerList';
 import ProductCount from './components/ProductCount';
 import MonthlyReport from './components/MonthlyReport';
 import YearlyReport from './components/YearlyReport';
+import IncomeStatement from './components/IncomeStatement';
 import MasterManagement from './components/MasterManagement';
 import BackupManagement from './components/BackupManagement';
 import LoginScreen from './components/LoginScreen';
@@ -432,6 +433,7 @@ function App() {
     { id: 'product-count', label: '製品別販売積算', icon: '📈' },
     { id: 'monthly-report', label: '月末レポート', icon: '📋' },
     { id: 'yearly-report', label: '年間ABC報告', icon: '📅' },
+    { id: 'income-statement', label: '収支計算書', icon: '💰' },
     { id: 'master', label: 'マスタ管理', icon: '⚙️' },
     { id: 'backup', label: 'データ管理', icon: '💾' },
   ];
@@ -663,6 +665,12 @@ function App() {
             monthlyReports={monthlyReports}
             customers={customers}
             sales={sales}
+          />
+        )}
+        {currentView === 'income-statement' && (
+          <IncomeStatement
+            monthlyReports={monthlyReports}
+            saveMonthlyReport={saveMonthlyReport}
           />
         )}
         {currentView === 'master' && (
