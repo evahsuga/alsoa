@@ -2,7 +2,7 @@
  * メインアプリケーションコンポーネント（サーバー版）
  * 化粧品販売管理アプリ - エックスサーバー対応
  *
- * @version 2.2 Server Edition
+ * @version 3.1 Server Edition
  */
 
 import React, { useState, useEffect } from 'react';
@@ -541,7 +541,7 @@ function App() {
               backgroundColor: '#333',
               padding: '2px 6px',
               borderRadius: 4
-            }}>v2.1</span>
+            }}>v3.1</span>
           </div>
           {/* PC: サイドバー折りたたみボタン */}
           {!isMobile && (
