@@ -4,109 +4,129 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-化粧品BtoC個人販売者向けの販売管理Webアプリケーション。月末の手書き伝票から5種類の紙書類への転記作業を自動化する。
+化粧品BtoC個人販売者向けの販売管理Webアプリ（v3.1）。月末の手書き伝票から6種類の書類への転記を自動化する。
 
-**本番URL (GitHub Pages)**: https://evahsuga.github.io/alsoa/
-**本番URL (サーバー版)**: https://evahpro.xsrv.jp/arsoa/
-**現行バージョン**: v3.0
+**本番URL (GitHub Pages)**: https://evahsuga.github.io/alsoa/  
+**本番URL (エックスサーバー)**: https://evahpro.xsrv.jp/arsoa/
 
 ## Commands
 
 ```bash
-npm install     # 依存関係インストール
-npm start       # 開発サーバー起動 (http://localhost:3000)
-npm run build   # 本番ビルド (build/フォルダに出力)
-npm run deploy  # GitHub Pagesへデプロイ（build後に自動実行）
-npm test        # テスト実行
+npm start                          # 開発サーバー (http://localhost:3000)
+npm run build                      # GitHub Pages用ビルド (PUBLIC_URL=/alsoa)
+npm run build:xserver              # エックスサーバー用ビルド (PUBLIC_URL=/arsoa, App.server.jsx使用)
+npm run deploy && npm run deploy:xserver  # 両環境同時デプロイ（常にこの形で実行）
 ```
+
+**⚠️ デプロイ注意**: GitHub Pages (`/alsoa/`) とエックスサーバー (`/arsoa/`) はベースパスが異なるため、同じビルド成果物を使い回してはいけない。`deploy:xserver` は内部で `build:xserver` を実行するので、常に上記の両環境同時コマンドを使うこと。
+
+## 二重アプリ構成（最重要）
+
+このリポジトリには**2つの独立したメインコンポーネント**が存在する：
+
+| ファイル | 用途 | データ永続化 | 認証 |
+|---------|------|------------|------|
+| `src/App.jsx` | GitHub Pages版 | LocalStorage | なし |
+| `src/App.server.jsx` | エックスサーバー版 | MySQL（PHP API経由） | パスワード認証あり |
+
+`src/index.jsx` が環境変数 `REACT_APP_USE_SERVER=true` の有無で使用するAppを切り替える。**新機能追加・メニュー追加・ルーティング追加は必ず両ファイルに行うこと。**
 
 ## Architecture
 
 ### State Management
-- App.jsx が全アプリケーションStateを管理（customers, sales, monthlyReports, customProducts, displayCutoff, sidebarCollapsed）
-- LocalStorageで永続化（`src/utils/storage.js`のSTORAGE_KEYSで定義）
-- 各コンポーネントにpropsでデータと操作関数を渡す
+- `App.jsx` / `App.server.jsx` が全Stateを管理（customers, sales, monthlyReports, customProducts, displayCutoff）
+- LocalStorage版: `src/utils/storage.js` の `loadAllData()` / `saveAllData()`
+- サーバー版: `src/utils/api.js` の `ApiClient` クラス（`/arsoa/api/` のPHP APIへfetch）
 
 ### Routing
-- React Routerは未使用。`currentView` stateで画面切り替え
-- menuItemsの`id`とcurrentViewをマッチングしてコンポーネントを表示
+- React Router未使用。`currentView` stateで画面切り替え
+- `menuItems` 配列の `id` と `currentView` をマッチング
 
-### Data Flow
-```
-App.jsx (State管理・データ操作関数)
-  ├── loadAllData() / saveAllData() → LocalStorage
-  └── 各Componentにpropsで渡す
-```
-
-### レスポンシブ対応
-- `useMediaQuery` フックで画面サイズ検出（768px境界）
-- モバイル: ハンバーガーメニュー + スライドインサイドバー
-- PC: 折りたたみ可能なサイドバー（`sidebarCollapsed` state）
-
-### 会計年度
-- 3月〜翌2月を1会計年度とする
-- `getFiscalYear(date)` で会計年度を取得
-- `FISCAL_MONTHS = [3,4,5,6,7,8,9,10,11,12,1,2]`
+### 書類一覧
+| 画面ID | 書類 | コンポーネント |
+|--------|------|--------------|
+| `sales-input` | 書類5・売上伝票入力 | SalesInput.jsx |
+| `customer-list` | 書類2・お客様分布リスト | CustomerList.jsx |
+| `product-count` | 書類4・製品別販売積算 | ProductCount.jsx |
+| `monthly-report` | 書類1・月末レポート | MonthlyReport.jsx |
+| `yearly-report` | 書類3・年間ABC報告 | YearlyReport.jsx |
+| `income-statement` | 書類6・収支計算書 | IncomeStatement.jsx |
 
 ## Key Data Structures
+
+### monthlyReports（月次レポート）
+```javascript
+{
+  year: 2026, month: 4,
+  targetSales: 0,
+  resultSales: 0,        // 通常顧客の売上（アプリ利用者除外）
+  purchase: 0,           // 仕入れ（上代）
+  purchaseInvoice: 0,    // 仕入れ（請求受額）← 書類6の④仕入金額
+  salesBonus: 0,         // 販売奨励金 ← 書類6の⑥
+  selfUse: 0,            // 自分の使用金額（アプリ利用者分が自動集計）
+  expenses: 0,           // 経費合計（書類6の⑧、収支計算書画面で入力）
+  inventory: 0,          // 在庫金額（書類6、収支計算書画面で入力）
+  threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
+  actions: { newCustomer, priceUp, jp, sample, monitor, expansion, repeat },
+  afterFollow: { total: 0, done: 0 },
+  metCount: 0
+}
+```
+
+### 書類6（収支計算書）の計算式
+- ③売上合計 = ①resultSales + ②selfUse
+- ⑤売上利益 = ③ - ④purchaseInvoice
+- ⑦売上総利益 = ⑤ + ⑥salesBonus
+- ⑨所得金額 = ⑦ - ⑧expenses
 
 ### Product Category Keys
 `skincare`, `baseMakeup`, `hairBodyCare`, `healthcare`, `pointMakeup`, `other`
 
-### Product Abbreviations (略称)
-- 6文字以内の半角カタカナ推奨（表示崩れ防止）
-- お客様分布リスト集計グループ: `QS`, `L`, `P`, `MO`, `SP`, `MP`, `other`
-- 略称マッピング: `CATEGORY_ABBREV`（productMaster.js）
+### アプリ利用者 (`isAppUser` フラグ)
+販売者本人の自己使用分を区別する顧客フラグ：
+- ダッシュボード・年間ABC報告: **除外**
+- 月末レポート: resultSalesから**除外**、selfUseに**自動集計**
+- お客様分布リスト: **表示する**（青背景、合計から除外）
+- 製品別販売積算: **含める**
 
-### 3ステップ実売数カウントルール
-カテゴリ文字列のマッチングルール:
-- **QS**: `'QS'` または `'QS(PF'` で始まる
-- **P**: `'P'` と完全一致
-- **L**: `'LI'`, `'LII'`, `'Lｾﾙ'`, `'L'` のいずれか
-- **MO**: `'MO'` と完全一致
-- **SP**: `'下地SP'` と完全一致
-- **MP**: `'下地MP'` と完全一致
+## 3ステップ実売数カウントルール
 
-### セット商品の分解ルール
-- **set3系** (`set3Ⅰ`, `set3Ⅱ`, `set3ｾﾙ`): QS + P + L
-- **B4系** (`B4Ⅰ`, `B4Ⅱ`, `B4ｾﾙ`): QS + P + L + MO
+- **QS**: `'QS'` または `'QS('` で始まる + set3系 + B4系
+- **P**: `'P'` 完全一致 + set3系 + B4系
+- **L**: `'LI'`, `'LII'`, `'Lｾﾙ'` + set3系 + B4系
+- **MO**: `'MO'` 完全一致 + B4系
+- **SP**: `'下地SP'` 完全一致
+- **MP**: `'下地MP'` 完全一致
+- **set3系** (`set3Ⅰ`, `set3Ⅱ`, `set3ｾﾙ`): QS + P + L を各+1
+- **B4系** (`B4Ⅰ`, `B4Ⅱ`, `B4ｾﾙ`): QS + P + L + MO を各+1
 
-### アプリ利用者機能 (v2.0)
-顧客に `isAppUser` フラグを設定することで、販売者本人の自己使用分を区別管理:
+## 会計年度
 
-| 画面 | アプリ利用者の扱い |
-|------|-------------------|
-| ダッシュボード | 売上・ランク集計から**除外** |
-| 月末レポート（書類1） | resultSalesから**除外**、selfUseに**自動集計** |
-| お客様分布リスト（書類2） | **表示する**（青背景で区別、合計から除外） |
-| 製品別販売積算表（書類4） | **含める**（目標カウントに計上） |
-| 年間ABC報告（書類3） | 売上集計から**除外** |
-
-### Tax Rates
-- ヘルスケア: 8%（軽減税率）
-- その他カテゴリ: 10%
-
-## Adding New Features
-
-1. `src/components/`にコンポーネント作成
-2. `App.jsx`の`menuItems`配列にナビ追加
-3. `currentView`の条件分岐にレンダリング追加
-
-## Adding Products
-
-`src/data/productMaster.js`の`PRODUCT_MASTER`に追加:
-```javascript
-{ code: '123456', name: '商品名', price: 3000, category: 'QS' }
-```
-※略称は`CATEGORY_ABBREV`にも追加が必要
+3月〜翌2月が1会計年度。`FISCAL_MONTHS = [3,4,5,6,7,8,9,10,11,12,1,2]`。  
+`getFiscalYear(date)` で年度取得（`src/utils/productUtils.js`）。
 
 ## Styling
 
-- CSS-in-JS（インラインスタイル）使用
-- 共通スタイルは`src/styles/styles.js`で定義
-- 幅の広いテーブルは`minWidth`設定で横スクロール対応
-- sticky列は`position: sticky`+`left`+`zIndex`で実装
+- CSS-in-JS（インラインスタイル）。共通スタイルは `src/styles/styles.js`
+- カラー: メイン `#1a1a2e`、アクセント `#e94560`、成功 `#10b981`、情報 `#3b82f6`
 
-## Encoding
+## Adding New Features
 
-UTF-8必須（BOM無し）。日本語製品名を含むため文字化け注意。
+1. `src/components/` にコンポーネント作成
+2. **`App.jsx` と `App.server.jsx` の両方**に import・menuItems・ルーティング追加
+3. 月末レポートデータを使う場合は `MonthlyReport.jsx` の初期stateにもフィールド追加（useStateとuseEffect内の2箇所）
+
+## Server-Side API (エックスサーバー版のみ)
+
+`server/api/` 以下にPHPファイル群。`src/utils/api.js` の `ApiClient` が呼び出す。  
+APIエンドポイント: `https://evahpro.xsrv.jp/arsoa/api/*.php`  
+設定ファイル: `server/api/config.php`（DB接続情報）
+
+## SSH / Deploy
+
+```
+Host: xserver-blog（~/.ssh/config に設定済み）
+実体: evahpro@evahpro.xsrv.jp:10022, 鍵: ~/.ssh/evahpro.key
+デプロイ先: /home/evahpro/evahpro.xsrv.jp/public_html/arsoa/
+api/ ディレクトリはrsync除外（PHPファイルは手動管理）
+```
