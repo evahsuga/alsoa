@@ -39,7 +39,9 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
     purchase: 0,
     purchaseInvoice: 0,
     salesBonus: 0,
-    selfUse: 0
+    selfUse: 0,
+    expenses: 0,
+    inventory: 0,
   });
 
   // 年月変更時にレポートを更新
@@ -70,7 +72,9 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         purchase: 0,
         purchaseInvoice: 0,
         salesBonus: 0,
-        selfUse: 0
+        selfUse: 0,
+        expenses: 0,
+        inventory: 0,
       });
     }
   }, [selectedYear, selectedMonth, monthlyReports]);
