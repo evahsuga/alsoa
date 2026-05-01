@@ -37,6 +37,8 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
     metCount: 0,
     threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
     purchase: 0,
+    purchaseInvoice: 0,
+    salesBonus: 0,
     selfUse: 0
   });
 
@@ -66,6 +68,8 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         metCount: 0,
         threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
         purchase: 0,
+        purchaseInvoice: 0,
+        salesBonus: 0,
         selfUse: 0
       });
     }
@@ -300,10 +304,20 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         <table>
           <tbody>
             <tr>
-              <th style="width:120px;">仕入れ</th>
+              <th style="width:160px;">仕入れ（上代）</th>
               <td style="width:150px;" class="text-right">¥${(report.purchase || 0).toLocaleString()}</td>
-              <th style="width:140px;">自分の使用金額</th>
-              <td style="width:150px;" class="text-right">¥${(report.selfUse || 0).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <th>仕入れ（請求受額）</th>
+              <td class="text-right">¥${(report.purchaseInvoice || 0).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <th>販売報奨金</th>
+              <td class="text-right">¥${(report.salesBonus || 0).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <th>自分の使用金額</th>
+              <td class="text-right">¥${(report.selfUse || 0).toLocaleString()}</td>
             </tr>
           </tbody>
         </table>
@@ -435,25 +449,26 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
 
         {/* 仕入れ・使用金額 */}
         <div style={styles.reportSection}>
-          <div style={styles.reportRow}>
-            <span>仕入れ:</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={(report.purchase || 0).toLocaleString()}
-              onChange={(e) => setReport({...report, purchase: parseInt(e.target.value.replace(/,/g, '')) || 0})}
-              style={styles.reportInput}
-            />
-            <span>円</span>
-            <span style={{marginLeft: 20}}>自分の使用金額:</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={(report.selfUse || 0).toLocaleString()}
-              onChange={(e) => setReport({...report, selfUse: parseInt(e.target.value.replace(/,/g, '')) || 0})}
-              style={styles.reportInput}
-            />
-            <span>円</span>
+          <h3 style={styles.reportSectionTitle}>☆仕入れ・使用金額</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+            {[
+              { label: '仕入れ（上代）', key: 'purchase' },
+              { label: '仕入れ（請求受額）', key: 'purchaseInvoice' },
+              { label: '販売報奨金', key: 'salesBonus' },
+              { label: '自分の使用金額', key: 'selfUse' },
+            ].map(({ label, key }) => (
+              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ minWidth: 150 }}>{label}:</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={(report[key] || 0).toLocaleString()}
+                  onChange={(e) => setReport({ ...report, [key]: parseInt(e.target.value.replace(/,/g, '')) || 0 })}
+                  style={styles.reportInput}
+                />
+                <span>円</span>
+              </div>
+            ))}
           </div>
         </div>
 
