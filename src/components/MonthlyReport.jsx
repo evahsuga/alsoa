@@ -36,6 +36,7 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
     afterFollow: { total: 0, done: 0 },
     metCount: 0,
     threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
+    purchaseCount: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
     purchase: 0,
     purchaseInvoice: 0,
     salesBonus: 0,
@@ -69,6 +70,7 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
         afterFollow: { total: 0, done: 0 },
         metCount: 0,
         threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
+        purchaseCount: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
         purchase: 0,
         purchaseInvoice: 0,
         salesBonus: 0,
@@ -323,6 +325,16 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
               <th>自分の使用金額</th>
               <td class="text-right">¥${(report.selfUse || 0).toLocaleString()}</td>
             </tr>
+            <tr>
+              <th>仕入れ個数</th>
+              <td class="text-center">
+                QS: ${report.purchaseCount?.qs || 0}個
+                パック: ${report.purchaseCount?.pack || 0}本
+                ローション: ${report.purchaseCount?.lotion || 0}本
+                MO: ${report.purchaseCount?.mo || 0}本
+                SP: ${report.purchaseCount?.sp || 0}本
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -473,6 +485,63 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
                 <span>円</span>
               </div>
             ))}
+            {/* 仕入れ個数 */}
+            <div style={{ marginTop: 4 }}>
+              <span style={{ minWidth: 150, display: 'inline-block' }}>仕入れ個数:</span>
+              <div style={{...styles.reportRow, flexWrap: 'wrap', gap: '8px 4px', marginTop: 4}}>
+                <span>QS</span>
+                <input
+                  type="number"
+                  value={report.purchaseCount?.qs || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    purchaseCount: { ...report.purchaseCount, qs: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>個 ／ パック</span>
+                <input
+                  type="number"
+                  value={report.purchaseCount?.pack || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    purchaseCount: { ...report.purchaseCount, pack: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>本 ／ ローション</span>
+                <input
+                  type="number"
+                  value={report.purchaseCount?.lotion || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    purchaseCount: { ...report.purchaseCount, lotion: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>本 ／ MO</span>
+                <input
+                  type="number"
+                  value={report.purchaseCount?.mo || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    purchaseCount: { ...report.purchaseCount, mo: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>本 ／ SP</span>
+                <input
+                  type="number"
+                  value={report.purchaseCount?.sp || 0}
+                  onChange={(e) => setReport({
+                    ...report,
+                    purchaseCount: { ...report.purchaseCount, sp: parseInt(e.target.value) || 0 }
+                  })}
+                  style={styles.smallInput}
+                />
+                <span>本</span>
+              </div>
+            </div>
           </div>
         </div>
 
