@@ -25,6 +25,7 @@ import ProductCount from './components/ProductCount';
 import MonthlyReport from './components/MonthlyReport';
 import YearlyReport from './components/YearlyReport';
 import IncomeStatement from './components/IncomeStatement';
+import Beyond from './components/Beyond';
 import MasterManagement from './components/MasterManagement';
 import BackupManagement from './components/BackupManagement';
 import LoginScreen from './components/LoginScreen';
@@ -434,6 +435,7 @@ function App() {
     { id: 'monthly-report', label: '月末レポート', icon: '📋' },
     { id: 'yearly-report', label: '年間ABC報告', icon: '📅' },
     { id: 'income-statement', label: '収支計算書', icon: '💰' },
+    { id: 'beyond', label: 'Beyond', icon: '🚀' },
     { id: 'master', label: 'マスタ管理', icon: '⚙️' },
     { id: 'backup', label: 'データ管理', icon: '💾' },
   ];
@@ -671,6 +673,11 @@ function App() {
           <IncomeStatement
             monthlyReports={monthlyReports}
             saveMonthlyReport={saveMonthlyReport}
+          />
+        )}
+        {currentView === 'beyond' && (
+          <Beyond
+            monthlyReports={monthlyReports}
           />
         )}
         {currentView === 'master' && (
