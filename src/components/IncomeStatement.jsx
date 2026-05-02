@@ -108,7 +108,7 @@ function IncomeStatement({ monthlyReports, saveMonthlyReport }) {
           <thead>
             <tr>
               <th style="width:28px;"></th>
-              <th style="width:120px;text-align:left;">項目</th>
+              <th style="width:150px;text-align:left;">項目</th>
               ${headerCells}
               <th style="background:#bfdbfe;">年間合計</th>
             </tr>
@@ -164,7 +164,7 @@ function IncomeStatement({ monthlyReports, saveMonthlyReport }) {
           <thead>
             <tr>
               <th style={thSt({ width: 32 })}></th>
-              <th style={thSt({ width: 130, textAlign: 'left' })}>項目</th>
+              <th style={thSt({ width: 160, textAlign: 'left' })}>項目</th>
               {FISCAL_MONTHS.map(m => (
                 <th key={m} style={thSt({ minWidth: 76 })}>{m}月</th>
               ))}
