@@ -4,7 +4,7 @@ import { getFiscalYear } from '../utils/productUtils';
 import { FISCAL_MONTHS } from '../data/productMaster';
 import { printDocument } from '../utils/printDocument';
 
-function IncomeStatement({ monthlyReports, saveMonthlyReport }) {
+function IncomeStatement({ monthlyReports }) {
   const [selectedYear, setSelectedYear] = useState(getFiscalYear(new Date()));
 
   const getReport = (month) => {
@@ -27,28 +27,6 @@ function IncomeStatement({ monthlyReports, saveMonthlyReport }) {
     return { sales, selfUse, totalSales, purchase, grossProfit, bonus, totalProfit, expenses, netIncome, inventory };
   };
 
-  const handleFieldChange = (month, field, rawValue) => {
-    const year = month >= 3 ? selectedYear : selectedYear + 1;
-    const existing = monthlyReports.find(r => r.year === year && r.month === month) || {
-      year, month,
-      targetSales: 0, resultSales: 0,
-      actions: {
-        newCustomer: { target: 0, result: 0, amount: 0 },
-        priceUp:     { target: 0, result: 0, amount: 0 },
-        jp:          { target: 0, result: 0, amount: 0 },
-        sample:      { target: 0, result: 0 },
-        monitor:     { target: 0, result: 0 },
-        expansion:   { target: 0, result: 0 },
-        repeat:      { target: 0, result: 0 },
-      },
-      afterFollow: { total: 0, done: 0 },
-      metCount: 0,
-      threeStepSales: { qs: 0, pack: 0, lotion: 0, mo: 0, sp: 0 },
-      purchase: 0, purchaseInvoice: 0, salesBonus: 0, selfUse: 0,
-      expenses: 0, inventory: 0,
-    };
-    saveMonthlyReport({ ...existing, [field]: parseInt(rawValue) || 0 });
-  };
 
   const totals = FISCAL_MONTHS.reduce((acc, month) => {
     const c = calc(month);
@@ -71,13 +49,13 @@ function IncomeStatement({ monthlyReports, saveMonthlyReport }) {
     { num: '①', label: '売上高',                        key: 'sales' },
     { num: '②', label: '自家消費',                       key: 'selfUse' },
     { num: '③', label: '売上合計金額\n①+②',              key: 'totalSales',  highlight: true },
-    { num: '④', label: '仕入金額\n(商品お買上高)',          key: 'purchase' },
+    { num: '④', label: '仕入金額\n(請求受額)',               key: 'purchase' },
     { num: '⑤', label: '売上利益\n③-④',                  key: 'grossProfit', highlight: true },
     { num: '⑥', label: '販売奨励金',                      key: 'bonus' },
     { num: '⑦', label: '売上総利益\n⑤+⑥',                key: 'totalProfit', highlight: true },
-    { num: '⑧', label: '経費合計\n(販促品+現金購入)',       key: 'expenses',    editable: true, dbKey: 'expenses' },
+    { num: '⑧', label: '経費合計\n(販促品+現金購入)',       key: 'expenses' },
     { num: '⑨', label: '所得金額\n⑦-⑧',                  key: 'netIncome',   highlight: true },
-    { num: '',  label: '在庫金額',                        key: 'inventory',   editable: true, dbKey: 'inventory', noTotal: true },
+    { num: '⑩', label: '在庫金額',                        key: 'inventory',   noTotal: true },
   ];
 
   const handlePrint = () => {
@@ -160,11 +138,11 @@ function IncomeStatement({ monthlyReports, saveMonthlyReport }) {
       </div>
 
       <div style={{ overflowX: 'auto', marginTop: 16 }}>
-        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <table style={{ borderCollapse: 'collapse', minWidth: '100%' }}>
           <thead>
             <tr>
               <th style={thSt({ width: 32 })}></th>
-              <th style={thSt({ width: 160, textAlign: 'left' })}>項目</th>
+              <th style={thSt({ minWidth: 160, textAlign: 'left' })}>項目</th>
               {FISCAL_MONTHS.map(m => (
                 <th key={m} style={thSt({ minWidth: 76 })}>{m}月</th>
               ))}
@@ -173,36 +151,13 @@ function IncomeStatement({ monthlyReports, saveMonthlyReport }) {
           </thead>
           <tbody>
             {rows.map(row => (
-              <tr key={row.key} style={{ backgroundColor: row.highlight ? '#f0fdf4' : undefined }}>
+              <tr key={row.key} style={{ backgroundColor: row.highlight ? '#f0fdf4' : undefined, height: 44 }}>
                 <td style={tdSt({ textAlign: 'center', color: '#6b7280', fontSize: 12 })}>{row.num}</td>
                 <td style={tdSt({ whiteSpace: 'pre-line', fontWeight: row.highlight ? 'bold' : 'normal', lineHeight: 1.5 })}>
                   {row.label}
                 </td>
                 {FISCAL_MONTHS.map(month => {
                   const val = calc(month)[row.key];
-                  if (row.editable) {
-                    return (
-                      <td key={month} style={tdSt({ padding: '2px 4px' })}>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={val ? val.toLocaleString() : ''}
-                          placeholder=""
-                          onChange={e => handleFieldChange(month, row.dbKey, e.target.value.replace(/,/g, ''))}
-                          style={{
-                            width: '100%',
-                            border: '1px solid #d1d5db',
-                            borderRadius: 3,
-                            padding: '2px 4px',
-                            textAlign: 'right',
-                            fontSize: 13,
-                            boxSizing: 'border-box',
-                            backgroundColor: '#fffbeb',
-                          }}
-                        />
-                      </td>
-                    );
-                  }
                   return (
                     <td key={month} style={tdSt({
                       textAlign: 'right',

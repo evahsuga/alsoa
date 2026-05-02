@@ -543,7 +543,7 @@ function App() {
               backgroundColor: '#333',
               padding: '2px 6px',
               borderRadius: 4
-            }}>v3.2</span>
+            }}>v3.3</span>
           </div>
           {/* PC: サイドバー折りたたみボタン */}
           {!isMobile && (

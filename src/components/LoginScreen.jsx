@@ -133,7 +133,7 @@ function LoginScreen({ onLogin, api }) {
 
         <div style={loginStyles.footer}>
           <p style={loginStyles.footerText}>
-            化粧品販売管理アプリ v3.2
+            化粧品販売管理アプリ v3.3
           </p>
         </div>
       </div>

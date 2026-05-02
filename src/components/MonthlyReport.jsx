@@ -326,6 +326,14 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
               <td class="text-right">¥${(report.selfUse || 0).toLocaleString()}</td>
             </tr>
             <tr>
+              <th>経費合計</th>
+              <td class="text-right">¥${(report.expenses || 0).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <th>在庫金額</th>
+              <td class="text-right">¥${(report.inventory || 0).toLocaleString()}</td>
+            </tr>
+            <tr>
               <th>仕入れ個数</th>
               <td class="text-center">
                 QS: ${report.purchaseCount?.qs || 0}個
@@ -472,6 +480,8 @@ function MonthlyReport({ customers, sales, monthlyReports, saveMonthlyReport }) 
               { label: '仕入れ（請求受額）', key: 'purchaseInvoice' },
               { label: '販売報奨金', key: 'salesBonus' },
               { label: '自分の使用金額', key: 'selfUse' },
+              { label: '経費合計', key: 'expenses' },
+              { label: '在庫金額', key: 'inventory' },
             ].map(({ label, key }) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ minWidth: 150 }}>{label}:</span>

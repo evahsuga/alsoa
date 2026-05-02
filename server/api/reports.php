@@ -29,7 +29,6 @@ function getReports($db) {
     $month = $_GET['month'] ?? null;
 
     if ($year && $month) {
-        // 特定月のレポート取得
         $stmt = $db->prepare('SELECT * FROM monthly_reports WHERE year = ? AND month = ?');
         $stmt->execute([$year, $month]);
         $row = $stmt->fetch();
@@ -37,11 +36,9 @@ function getReports($db) {
         if ($row) {
             jsonResponse(formatReport($row));
         } else {
-            // レポートが存在しない場合は空のデータを返す
             jsonResponse(getDefaultReport($year, $month));
         }
     } else {
-        // 全レポート取得
         $stmt = $db->query('SELECT * FROM monthly_reports ORDER BY year DESC, month DESC');
         $rows = $stmt->fetchAll();
 
@@ -71,60 +68,73 @@ function saveReport($db) {
         errorResponse('月は1〜12の範囲で指定してください');
     }
 
-    // JSON化するフィールド
-    $actions = isset($data['actions']) ? json_encode($data['actions'], JSON_UNESCAPED_UNICODE) : null;
-    $afterFollow = isset($data['afterFollow']) ? json_encode($data['afterFollow'], JSON_UNESCAPED_UNICODE) : null;
+    $actions        = isset($data['actions'])        ? json_encode($data['actions'],        JSON_UNESCAPED_UNICODE) : null;
+    $afterFollow    = isset($data['afterFollow'])    ? json_encode($data['afterFollow'],    JSON_UNESCAPED_UNICODE) : null;
     $threeStepSales = isset($data['threeStepSales']) ? json_encode($data['threeStepSales'], JSON_UNESCAPED_UNICODE) : null;
+    $purchaseCount  = isset($data['purchaseCount'])  ? json_encode($data['purchaseCount'],  JSON_UNESCAPED_UNICODE) : null;
 
-    // 既存レポートの確認
     $stmt = $db->prepare('SELECT id FROM monthly_reports WHERE year = ? AND month = ?');
     $stmt->execute([$year, $month]);
     $existing = $stmt->fetch();
 
     if ($existing) {
-        // 更新
         $stmt = $db->prepare('
             UPDATE monthly_reports SET
-                target_sales = ?,
-                result_sales = ?,
-                purchase = ?,
-                self_use = ?,
-                actions = ?,
-                after_follow = ?,
-                met_count = ?,
-                three_step_sales = ?
+                target_sales     = ?,
+                result_sales     = ?,
+                purchase         = ?,
+                purchase_invoice = ?,
+                sales_bonus      = ?,
+                self_use         = ?,
+                expenses         = ?,
+                inventory        = ?,
+                actions          = ?,
+                after_follow     = ?,
+                met_count        = ?,
+                three_step_sales = ?,
+                purchase_count   = ?
             WHERE year = ? AND month = ?
         ');
         $stmt->execute([
-            $data['targetSales'] ?? 0,
-            $data['resultSales'] ?? 0,
-            $data['purchase'] ?? 0,
-            $data['selfUse'] ?? 0,
+            $data['targetSales']     ?? 0,
+            $data['resultSales']     ?? 0,
+            $data['purchase']        ?? 0,
+            $data['purchaseInvoice'] ?? 0,
+            $data['salesBonus']      ?? 0,
+            $data['selfUse']         ?? 0,
+            $data['expenses']        ?? 0,
+            $data['inventory']       ?? 0,
             $actions,
             $afterFollow,
-            $data['metCount'] ?? 0,
+            $data['metCount']        ?? 0,
             $threeStepSales,
+            $purchaseCount,
             $year,
             $month
         ]);
     } else {
-        // 新規登録
         $stmt = $db->prepare('
             INSERT INTO monthly_reports
-                (year, month, target_sales, result_sales, purchase, self_use, actions, after_follow, met_count, three_step_sales)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (year, month, target_sales, result_sales, purchase, purchase_invoice, sales_bonus,
+                 self_use, expenses, inventory, actions, after_follow, met_count, three_step_sales, purchase_count)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
             $year,
             $month,
-            $data['targetSales'] ?? 0,
-            $data['resultSales'] ?? 0,
-            $data['purchase'] ?? 0,
-            $data['selfUse'] ?? 0,
+            $data['targetSales']     ?? 0,
+            $data['resultSales']     ?? 0,
+            $data['purchase']        ?? 0,
+            $data['purchaseInvoice'] ?? 0,
+            $data['salesBonus']      ?? 0,
+            $data['selfUse']         ?? 0,
+            $data['expenses']        ?? 0,
+            $data['inventory']       ?? 0,
             $actions,
             $afterFollow,
-            $data['metCount'] ?? 0,
-            $threeStepSales
+            $data['metCount']        ?? 0,
+            $threeStepSales,
+            $purchaseCount
         ]);
     }
 
@@ -136,16 +146,21 @@ function saveReport($db) {
  */
 function formatReport($row) {
     return [
-        'year' => (int)$row['year'],
-        'month' => (int)$row['month'],
-        'targetSales' => (int)$row['target_sales'],
-        'resultSales' => (int)$row['result_sales'],
-        'purchase' => (int)$row['purchase'],
-        'selfUse' => (int)$row['self_use'],
-        'actions' => $row['actions'] ? json_decode($row['actions'], true) : getDefaultActions(),
-        'afterFollow' => $row['after_follow'] ? json_decode($row['after_follow'], true) : ['total' => 0, 'done' => 0],
-        'metCount' => (int)$row['met_count'],
-        'threeStepSales' => $row['three_step_sales'] ? json_decode($row['three_step_sales'], true) : getDefaultThreeStepSales()
+        'year'            => (int)$row['year'],
+        'month'           => (int)$row['month'],
+        'targetSales'     => (int)$row['target_sales'],
+        'resultSales'     => (int)$row['result_sales'],
+        'purchase'        => (int)$row['purchase'],
+        'purchaseInvoice' => (int)($row['purchase_invoice'] ?? 0),
+        'salesBonus'      => (int)($row['sales_bonus']      ?? 0),
+        'selfUse'         => (int)$row['self_use'],
+        'expenses'        => (int)($row['expenses']         ?? 0),
+        'inventory'       => (int)($row['inventory']        ?? 0),
+        'actions'         => $row['actions']          ? json_decode($row['actions'],          true) : getDefaultActions(),
+        'afterFollow'     => $row['after_follow']     ? json_decode($row['after_follow'],     true) : ['total' => 0, 'done' => 0],
+        'metCount'        => (int)$row['met_count'],
+        'threeStepSales'  => $row['three_step_sales'] ? json_decode($row['three_step_sales'], true) : getDefaultThreeStepSales(),
+        'purchaseCount'   => $row['purchase_count']   ? json_decode($row['purchase_count'],   true) : getDefaultPurchaseCount(),
     ];
 }
 
@@ -154,43 +169,40 @@ function formatReport($row) {
  */
 function getDefaultReport($year, $month) {
     return [
-        'year' => (int)$year,
-        'month' => (int)$month,
-        'targetSales' => 0,
-        'resultSales' => 0,
-        'purchase' => 0,
-        'selfUse' => 0,
-        'actions' => getDefaultActions(),
-        'afterFollow' => ['total' => 0, 'done' => 0],
-        'metCount' => 0,
-        'threeStepSales' => getDefaultThreeStepSales()
+        'year'            => (int)$year,
+        'month'           => (int)$month,
+        'targetSales'     => 0,
+        'resultSales'     => 0,
+        'purchase'        => 0,
+        'purchaseInvoice' => 0,
+        'salesBonus'      => 0,
+        'selfUse'         => 0,
+        'expenses'        => 0,
+        'inventory'       => 0,
+        'actions'         => getDefaultActions(),
+        'afterFollow'     => ['total' => 0, 'done' => 0],
+        'metCount'        => 0,
+        'threeStepSales'  => getDefaultThreeStepSales(),
+        'purchaseCount'   => getDefaultPurchaseCount(),
     ];
 }
 
-/**
- * デフォルトのアクション構造
- */
 function getDefaultActions() {
     return [
         'newCustomer' => ['target' => 0, 'result' => 0, 'amount' => 0],
-        'priceUp' => ['target' => 0, 'result' => 0, 'amount' => 0],
-        'jp' => ['target' => 0, 'result' => 0, 'amount' => 0],
-        'sample' => ['target' => 0, 'result' => 0],
-        'monitor' => ['target' => 0, 'result' => 0],
-        'expansion' => ['target' => 0, 'result' => 0],
-        'repeat' => ['target' => 0, 'result' => 0]
+        'priceUp'     => ['target' => 0, 'result' => 0, 'amount' => 0],
+        'jp'          => ['target' => 0, 'result' => 0, 'amount' => 0],
+        'sample'      => ['target' => 0, 'result' => 0],
+        'monitor'     => ['target' => 0, 'result' => 0],
+        'expansion'   => ['target' => 0, 'result' => 0],
+        'repeat'      => ['target' => 0, 'result' => 0]
     ];
 }
 
-/**
- * デフォルトの3ステップ実売数構造
- */
 function getDefaultThreeStepSales() {
-    return [
-        'qs' => 0,
-        'pack' => 0,
-        'lotion' => 0,
-        'mo' => 0,
-        'sp' => 0
-    ];
+    return ['qs' => 0, 'pack' => 0, 'lotion' => 0, 'mo' => 0, 'sp' => 0];
+}
+
+function getDefaultPurchaseCount() {
+    return ['qs' => 0, 'pack' => 0, 'lotion' => 0, 'mo' => 0, 'sp' => 0];
 }
