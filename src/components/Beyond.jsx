@@ -4,6 +4,22 @@ import { getFiscalYear } from '../utils/productUtils';
 import { FISCAL_MONTHS } from '../data/productMaster';
 import { printDocument } from '../utils/printDocument';
 
+// 月別カラーマップ（会計年度: 3月〜2月）
+const MONTH_COLORS = {
+  3:  '#86efac', // 3月  萌黄
+  4:  '#34d399', // 4月  エメラルド
+  5:  '#67e8f9', // 5月  水色
+  6:  '#60a5fa', // 6月  ブルー
+  7:  '#a78bfa', // 7月  ラベンダー
+  8:  '#f472b6', // 8月  ピンク
+  9:  '#fb923c', // 9月  オレンジ
+  10: '#fbbf24', // 10月 アンバー
+  11: '#e879f9', // 11月 パープル
+  12: '#f87171', // 12月 レッド
+  1:  '#94a3b8', // 1月  スレート
+  2:  '#fde68a', // 2月  イエロー
+};
+
 const BEYOND_TARGETS = {
   QS: 120,
   P:  60,
@@ -53,11 +69,16 @@ function Beyond({ monthlyReports }) {
   const grid = Array.from({ length: gridSize }, (_, i) => units[i] || null);
 
   const handlePrint = () => {
-    const categoryColor = categories[selectedCategory].color;
     const gridCells = grid.map((unit, index) => {
       const isOverTarget = index >= target;
+      const monthColor = unit ? MONTH_COLORS[unit.month] : '';
+      const cellStyle = unit
+        ? (isOverTarget
+          ? 'background-color:#fef3c7;border:2px solid #f59e0b;'
+          : `background-color:${monthColor}60;border:2px solid ${monthColor};`)
+        : '';
       return `
-        <div class="count-cell ${unit ? 'filled' : ''}" style="${isOverTarget && unit ? 'background-color:#fef3c7;border:2px solid #f59e0b;' : ''}">
+        <div class="count-cell ${unit ? 'filled' : ''}" style="${cellStyle}">
           <div class="num">${index + 1}</div>
           ${unit ? `<div class="name">${unit.month}月</div>` : ''}
         </div>
@@ -143,21 +164,35 @@ function Beyond({ monthlyReports }) {
         </div>
       </div>
 
+      {/* 月別カラー凡例 */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '12px 0 4px' }}>
+        {FISCAL_MONTHS.map(month => (
+          <div key={month} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{
+              width: 14, height: 14, borderRadius: 3,
+              backgroundColor: MONTH_COLORS[month],
+              border: `1px solid ${MONTH_COLORS[month]}`
+            }} />
+            <span style={{ fontSize: 11, color: '#6b7280' }}>{month}月</span>
+          </div>
+        ))}
+      </div>
+
       {/* カウントグリッド */}
       <div style={styles.countGrid}>
         {grid.map((unit, index) => {
-          const categoryColor = categories[selectedCategory].color;
           const isOverTarget = index >= target;
+          const monthColor = unit ? MONTH_COLORS[unit.month] : null;
           return (
             <div
               key={index}
               style={{
                 ...styles.countCell,
                 backgroundColor: unit
-                  ? (isOverTarget ? '#fef3c7' : `${categoryColor}20`)
+                  ? (isOverTarget ? '#fef3c7' : `${monthColor}60`)
                   : '#f9fafb',
                 borderColor: unit
-                  ? (isOverTarget ? '#f59e0b' : categoryColor)
+                  ? (isOverTarget ? '#f59e0b' : monthColor)
                   : '#e5e7eb',
                 borderWidth: isOverTarget && unit ? 2 : 1,
               }}
