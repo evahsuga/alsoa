@@ -701,14 +701,15 @@ function SalesInput({
         <div
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-            zIndex: 1000, display: 'flex', alignItems: 'flex-end'
+            zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 16px'
           }}
           onClick={() => setShowCustomerModal(false)}
         >
           <div
             style={{
-              background: '#fff', width: '100%', maxHeight: '70vh',
-              borderRadius: '16px 16px 0 0', padding: 16,
+              background: '#fff', width: '100%', maxWidth: 480, maxHeight: '70vh',
+              borderRadius: 16, padding: 16,
               display: 'flex', flexDirection: 'column'
             }}
             onClick={e => e.stopPropagation()}
