@@ -445,23 +445,10 @@ function SalesInput({
                   const existing = customers.find(c => c.name === e.target.value);
                   setNewCustomerMode(!existing && e.target.value.length > 0);
                 }}
+                onFocus={isMobile ? () => { setShowCustomerModal(true); setCustomerSearch(''); } : undefined}
                 placeholder="顧客名を入力"
                 style={isMobile ? styles.inputMobile : styles.input}
               />
-              {isMobile && (
-                <button
-                  type="button"
-                  onClick={() => { setShowCustomerModal(true); setCustomerSearch(''); }}
-                  style={{
-                    marginTop: 8, width: '100%', padding: '12px',
-                    background: '#f0f4ff', border: '1px solid #3b82f6',
-                    borderRadius: 8, color: '#3b82f6', fontSize: 15,
-                    cursor: 'pointer', textAlign: 'center'
-                  }}
-                >
-                  登録済み顧客から選択
-                </button>
-              )}
               <datalist id="customer-list">
                 {customers.map(c => (
                   <option key={c.id} value={c.name} />
