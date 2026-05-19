@@ -34,7 +34,7 @@ export const PRODUCT_MASTER = {
       // セット商品
       { code: '440131', name: 'セット3 Ⅰ', price: 11000, category: 'set3Ⅰ' },
       { code: '440149', name: 'セット3 Ⅱ', price: 11000, category: 'set3Ⅱ' },
-      { code: '440157', name: 'セット3 セル', price: 12400, category: 'set3ｾﾙ' },
+      { code: '440157', name: 'セット3 セル', price: 12300, category: 'set3ｾﾙ' },
       { code: '440001', name: 'ベスト4 Ⅰ', price: 17500, category: 'B4Ⅰ' },
       { code: '440002', name: 'ベスト4 Ⅱ', price: 20500, category: 'B4Ⅱ' },
       { code: '440003', name: 'ベスト4 セル', price: 27200, category: 'B4ｾﾙ' },

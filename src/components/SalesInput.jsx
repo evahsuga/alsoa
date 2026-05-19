@@ -41,6 +41,7 @@ function SalesInput({
   });
   const [newCustomerMode, setNewCustomerMode] = useState(false);
   const [newCustomerRank, setNewCustomerRank] = useState('C');
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
 
   // OCR関連ステート
   const [ocrError, setOcrError] = useState(null);
@@ -446,6 +447,20 @@ function SalesInput({
                 placeholder="顧客名を入力"
                 style={isMobile ? styles.inputMobile : styles.input}
               />
+              {isMobile && (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerModal(true)}
+                  style={{
+                    marginTop: 8, width: '100%', padding: '12px',
+                    background: '#f0f4ff', border: '1px solid #3b82f6',
+                    borderRadius: 8, color: '#3b82f6', fontSize: 15,
+                    cursor: 'pointer', textAlign: 'center'
+                  }}
+                >
+                  登録済み顧客から選択
+                </button>
+              )}
               <datalist id="customer-list">
                 {customers.map(c => (
                   <option key={c.id} value={c.name} />
@@ -692,6 +707,58 @@ function SalesInput({
           </button>
         </div>
       </div>
+
+      {/* 顧客選択モーダル（モバイル・タブレット用） */}
+      {showCustomerModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            zIndex: 1000, display: 'flex', alignItems: 'flex-end'
+          }}
+          onClick={() => setShowCustomerModal(false)}
+        >
+          <div
+            style={{
+              background: '#fff', width: '100%', maxHeight: '70vh',
+              borderRadius: '16px 16px 0 0', padding: 16,
+              display: 'flex', flexDirection: 'column'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 16, fontWeight: 'bold' }}>顧客を選択</span>
+              <button
+                type="button"
+                onClick={() => setShowCustomerModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}
+              >✕</button>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {customers.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    setFormData({...formData, customerName: c.name});
+                    setNewCustomerMode(false);
+                    setShowCustomerModal(false);
+                  }}
+                  style={{
+                    display: 'block', width: '100%', padding: '14px 12px',
+                    textAlign: 'left', background: 'none', border: 'none',
+                    borderBottom: '1px solid #eee', cursor: 'pointer', fontSize: 16
+                  }}
+                >
+                  {c.name}
+                  <span style={{ fontSize: 12, color: '#888', marginLeft: 8 }}>
+                    {c.rank}ランク
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
