@@ -42,6 +42,7 @@ function SalesInput({
   const [newCustomerMode, setNewCustomerMode] = useState(false);
   const [newCustomerRank, setNewCustomerRank] = useState('C');
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState('');
 
   // OCR関連ステート
   const [ocrError, setOcrError] = useState(null);
@@ -450,7 +451,7 @@ function SalesInput({
               {isMobile && (
                 <button
                   type="button"
-                  onClick={() => setShowCustomerModal(true)}
+                  onClick={() => { setShowCustomerModal(true); setCustomerSearch(''); }}
                   style={{
                     marginTop: 8, width: '100%', padding: '12px',
                     background: '#f0f4ff', border: '1px solid #3b82f6',
@@ -733,8 +734,23 @@ function SalesInput({
                 style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}
               >✕</button>
             </div>
+            <input
+              type="text"
+              value={customerSearch}
+              onChange={e => setCustomerSearch(e.target.value)}
+              placeholder="名前で絞り込み..."
+              autoFocus
+              style={{
+                width: '100%', padding: '10px 12px', marginBottom: 12,
+                border: '1px solid #ddd', borderRadius: 8,
+                fontSize: 16, boxSizing: 'border-box'
+              }}
+            />
             <div style={{ overflowY: 'auto', flex: 1 }}>
-              {customers.map(c => (
+              {customers
+                .filter(c => c.name.includes(customerSearch))
+                .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+                .map(c => (
                 <button
                   key={c.id}
                   type="button"
