@@ -230,9 +230,10 @@ function MasterManagement({
                     <td style={styles.td}>
                       <input
                         type="text"
-                        value={customer.yomi || ''}
-                        onChange={(e) => updateCustomer(customer.id, { yomi: e.target.value })}
-                        style={{...styles.inlineSelect, width: 120}}
+                        key={customer.id + '_yomi'}
+                        defaultValue={customer.yomi || ''}
+                        onBlur={(e) => updateCustomer(customer.id, { yomi: e.target.value })}
+                        style={{...styles.inlineSelect, width: 120, cursor: 'text'}}
                         placeholder="読み仮名"
                       />
                     </td>

@@ -38,7 +38,7 @@ export const loadAllData = () => {
     const customers = rawCustomers.map(c => ({
       ...c,
       isAppUser: c.isAppUser || false,
-      yomi: c.yomi || c.name  // たたき台：未設定なら名前をコピー（漢字名は後で修正）
+      yomi: 'yomi' in c ? c.yomi : c.name  // たたき台：yomiが未定義の場合のみ名前をコピー
     }));
     const sales = JSON.parse(localStorage.getItem(STORAGE_KEYS.SALES)) || DEFAULT_VALUES.sales;
     const monthlyReports = JSON.parse(localStorage.getItem(STORAGE_KEYS.MONTHLY_REPORTS)) || DEFAULT_VALUES.monthlyReports;
