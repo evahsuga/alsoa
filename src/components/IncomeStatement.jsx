@@ -4,7 +4,7 @@ import { getFiscalYear } from '../utils/productUtils';
 import { FISCAL_MONTHS } from '../data/productMaster';
 import { printDocument } from '../utils/printDocument';
 
-function IncomeStatement({ monthlyReports }) {
+function IncomeStatement({ monthlyReports, sales = [], customers = [] }) {
   const [selectedYear, setSelectedYear] = useState(getFiscalYear(new Date()));
 
   const getReport = (month) => {
@@ -12,11 +12,30 @@ function IncomeStatement({ monthlyReports }) {
     return monthlyReports.find(r => r.year === year && r.month === month) || {};
   };
 
+  const calcSalesFromData = (month) => {
+    const year = month >= 3 ? selectedYear : selectedYear + 1;
+    let resultSales = 0;
+    let selfUse = 0;
+    sales.filter(s => {
+      const d = new Date(s.date);
+      return d.getFullYear() === year && d.getMonth() + 1 === month;
+    }).forEach(sale => {
+      const isApp = customers.find(c => c.name === sale.customerName)?.isAppUser || false;
+      sale.items.forEach(item => {
+        const amount = item.price * item.quantity;
+        if (isApp) selfUse += amount;
+        else resultSales += amount;
+      });
+    });
+    return { resultSales, selfUse };
+  };
+
   const calc = (month) => {
     const r = getReport(month);
-    const sales      = r.resultSales     || 0;  // ①
-    const selfUse    = r.selfUse         || 0;  // ②
-    const totalSales = sales + selfUse;          // ③
+    const { resultSales: liveSales, selfUse: liveSelfUse } = calcSalesFromData(month);
+    const sales_     = liveSales;                // ①（salesデータからリアルタイム計算）
+    const selfUse    = liveSelfUse;              // ②
+    const totalSales = sales_ + selfUse;         // ③
     const purchase   = r.purchaseInvoice || 0;  // ④
     const grossProfit = totalSales - purchase;   // ⑤
     const bonus      = r.salesBonus      || 0;  // ⑥
@@ -24,7 +43,7 @@ function IncomeStatement({ monthlyReports }) {
     const expenses   = r.expenses        || 0;  // ⑧
     const netIncome  = totalProfit - expenses;  // ⑨
     const inventory  = r.inventory       || 0;  // 在庫
-    return { sales, selfUse, totalSales, purchase, grossProfit, bonus, totalProfit, expenses, netIncome, inventory };
+    return { sales: sales_, selfUse, totalSales, purchase, grossProfit, bonus, totalProfit, expenses, netIncome, inventory };
   };
 
 

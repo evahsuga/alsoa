@@ -673,6 +673,8 @@ function App() {
           <IncomeStatement
             monthlyReports={monthlyReports}
             saveMonthlyReport={saveMonthlyReport}
+            sales={sales}
+            customers={customers}
           />
         )}
         {currentView === 'beyond' && (
