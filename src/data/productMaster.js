@@ -195,6 +195,7 @@ export const PRODUCT_MASTER = {
       { code: '000001', name: 'フレッシュフラワーセット', price: 8700, category: 'ﾌﾗﾜｰ' },
       { code: '000002', name: 'リップパレット', price: 1200, category: 'ﾊﾟﾚｯﾄR' },
       { code: '000003', name: 'シェードオンパレット', price: 1300, category: 'ﾊﾟﾚｯﾄS' },
+      { code: '000004', name: 'アイカラーベース', price: 2700, category: 'EB' },
     ]
   }
 };
