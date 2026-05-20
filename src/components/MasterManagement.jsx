@@ -158,13 +158,18 @@ function MasterManagement({
                 onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
                 style={styles.input}
               />
-              <input
-                type="text"
-                placeholder="読み仮名（ひらがな）"
-                value={newCustomer.yomi}
-                onChange={(e) => setNewCustomer({...newCustomer, yomi: e.target.value})}
-                style={{...styles.input, width: 160}}
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="読み仮名（ひらがな）"
+                  value={newCustomer.yomi}
+                  onChange={(e) => setNewCustomer({...newCustomer, yomi: e.target.value})}
+                  style={{...styles.input, width: 160}}
+                />
+                <p style={{ fontSize: 11, color: '#e94560', margin: '3px 0 0' }}>
+                  ※読み仮名を一緒に入力してください。登録がないと並べ替えに対応できません
+                </p>
+              </div>
               <select
                 value={newCustomer.rank}
                 onChange={(e) => setNewCustomer({...newCustomer, rank: e.target.value})}

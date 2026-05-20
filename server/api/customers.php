@@ -32,7 +32,7 @@ switch ($method) {
  * 顧客一覧取得
  */
 function getCustomers($db) {
-    $stmt = $db->query('SELECT id, name, yomi, rank, is_app_user as isAppUser FROM customers ORDER BY name');
+    $stmt = $db->query('SELECT id, name, yomi, rank, is_app_user as isAppUser FROM customers ORDER BY CASE WHEN yomi = \'\' THEN name ELSE yomi END, name');
     $customers = $stmt->fetchAll();
 
     // is_app_user を boolean に変換
