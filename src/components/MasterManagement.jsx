@@ -20,7 +20,7 @@ function MasterManagement({
   deleteCustomProduct
 }) {
   const [activeTab, setActiveTab] = useState('customers');
-  const [newCustomer, setNewCustomer] = useState({ name: '', rank: 'C', isAppUser: false });
+  const [newCustomer, setNewCustomer] = useState({ name: '', yomi: '', rank: 'C', isAppUser: false });
   const [newProduct, setNewProduct] = useState({
     categoryKey: 'skincare',
     code: '',
@@ -55,7 +55,7 @@ function MasterManagement({
       return;
     }
     addCustomer(newCustomer);
-    setNewCustomer({ name: '', rank: 'C', isAppUser: false });
+    setNewCustomer({ name: '', yomi: '', rank: 'C', isAppUser: false });
   };
 
   /**
@@ -158,6 +158,13 @@ function MasterManagement({
                 onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
                 style={styles.input}
               />
+              <input
+                type="text"
+                placeholder="読み仮名（ひらがな）"
+                value={newCustomer.yomi}
+                onChange={(e) => setNewCustomer({...newCustomer, yomi: e.target.value})}
+                style={{...styles.input, width: 160}}
+              />
               <select
                 value={newCustomer.rank}
                 onChange={(e) => setNewCustomer({...newCustomer, rank: e.target.value})}
@@ -209,6 +216,7 @@ function MasterManagement({
                 <tr>
                   <th style={styles.th}>No</th>
                   <th style={styles.th}>顧客名</th>
+                  <th style={styles.th}>読み仮名</th>
                   <th style={styles.th}>ランク</th>
                   <th style={{...styles.th, width: 80}}>利用者</th>
                   <th style={styles.th}>操作</th>
@@ -219,6 +227,15 @@ function MasterManagement({
                   <tr key={customer.id}>
                     <td style={styles.td}>{index + 1}</td>
                     <td style={styles.td}>{customer.name}</td>
+                    <td style={styles.td}>
+                      <input
+                        type="text"
+                        value={customer.yomi || ''}
+                        onChange={(e) => updateCustomer(customer.id, { yomi: e.target.value })}
+                        style={{...styles.inlineSelect, width: 120}}
+                        placeholder="読み仮名"
+                      />
+                    </td>
                     <td style={styles.td}>
                       <select
                         value={customer.rank}

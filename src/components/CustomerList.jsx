@@ -93,9 +93,17 @@ function CustomerList({ customers, sales, updateCustomer }) {
     };
   };
 
-  const filteredCustomers = customers.filter(c =>
-    c.name.includes(searchTerm) || c.rank.includes(searchTerm)
-  );
+  const filteredCustomers = customers
+    .filter(c =>
+      c.name.includes(searchTerm) ||
+      c.rank.includes(searchTerm) ||
+      (c.yomi || '').includes(searchTerm)
+    )
+    .sort((a, b) => {
+      const ay = a.yomi || a.name;
+      const by = b.yomi || b.name;
+      return ay.localeCompare(by, 'ja');
+    });
 
   /**
    * 略称集計の合計を計算

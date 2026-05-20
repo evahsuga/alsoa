@@ -750,7 +750,11 @@ function SalesInput({
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {customers
                 .filter(c => c.name.includes(customerSearch))
-                .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+                .sort((a, b) => {
+                  const ay = a.yomi || a.name;
+                  const by = b.yomi || b.name;
+                  return ay.localeCompare(by, 'ja');
+                })
                 .map(c => (
                 <button
                   key={c.id}
