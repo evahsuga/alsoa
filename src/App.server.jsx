@@ -155,7 +155,7 @@ function App() {
   const updateCustomer = async (id, updates) => {
     try {
       const oldCustomer = customers.find(c => c.id === id);
-      await api.updateCustomer(id, { ...updates, oldName: oldCustomer?.name });
+      await api.updateCustomer(id, { ...oldCustomer, ...updates, oldName: oldCustomer?.name });
       const newCustomers = customers.map(c =>
         c.id === id ? { ...c, ...updates } : c
       );

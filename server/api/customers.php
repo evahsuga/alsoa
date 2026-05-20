@@ -32,13 +32,14 @@ switch ($method) {
  * 顧客一覧取得
  */
 function getCustomers($db) {
-    $stmt = $db->query('SELECT id, name, rank, is_app_user as isAppUser FROM customers ORDER BY name');
+    $stmt = $db->query('SELECT id, name, yomi, rank, is_app_user as isAppUser FROM customers ORDER BY name');
     $customers = $stmt->fetchAll();
 
     // is_app_user を boolean に変換
     foreach ($customers as &$customer) {
         $customer['id'] = (int)$customer['id'];
         $customer['isAppUser'] = (bool)$customer['isAppUser'];
+        $customer['yomi'] = $customer['yomi'] ?? '';
     }
 
     jsonResponse($customers);
@@ -56,6 +57,7 @@ function createCustomer($db) {
 
     $id = $data['id'] ?? (int)(microtime(true) * 1000);
     $name = $data['name'];
+    $yomi = $data['yomi'] ?? '';
     $rank = $data['rank'] ?? 'C';
     $isAppUser = $data['isAppUser'] ?? false;
 
@@ -65,8 +67,8 @@ function createCustomer($db) {
     }
 
     try {
-        $stmt = $db->prepare('INSERT INTO customers (id, name, rank, is_app_user) VALUES (?, ?, ?, ?)');
-        $stmt->execute([$id, $name, $rank, $isAppUser ? 1 : 0]);
+        $stmt = $db->prepare('INSERT INTO customers (id, name, yomi, rank, is_app_user) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$id, $name, $yomi, $rank, $isAppUser ? 1 : 0]);
 
         jsonResponse([
             'success' => true,
@@ -96,6 +98,7 @@ function updateCustomer($db, $id) {
     }
 
     $name = $data['name'];
+    $yomi = $data['yomi'] ?? '';
     $rank = $data['rank'] ?? 'C';
     $isAppUser = $data['isAppUser'] ?? false;
 
@@ -104,8 +107,8 @@ function updateCustomer($db, $id) {
         $rank = 'C';
     }
 
-    $stmt = $db->prepare('UPDATE customers SET name = ?, rank = ?, is_app_user = ? WHERE id = ?');
-    $stmt->execute([$name, $rank, $isAppUser ? 1 : 0, $id]);
+    $stmt = $db->prepare('UPDATE customers SET name = ?, yomi = ?, rank = ?, is_app_user = ? WHERE id = ?');
+    $stmt->execute([$name, $yomi, $rank, $isAppUser ? 1 : 0, $id]);
 
     if ($stmt->rowCount() === 0) {
         errorResponse('顧客が見つかりません', 404);
