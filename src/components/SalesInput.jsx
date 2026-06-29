@@ -137,10 +137,52 @@ function SalesInput({
         name: product.name,
         code: product.code,
         price: product.price,
-        category: product.category
+        category: product.category,
+        categoryKey: product.categoryKey
       };
       setFormData({ ...formData, items: newItems });
     }
+  };
+
+  // ============================================
+  // カテゴリ→商品の2段階選択
+  // ============================================
+
+  // カテゴリ一覧（製品マスタの大分類）
+  const categoryOptions = Object.entries(PRODUCT_MASTER).map(
+    ([key, category]) => ({ key, name: category.name })
+  );
+
+  // 指定カテゴリの商品一覧（組み込み＋カスタム）
+  const getProductsForCategory = (categoryKey) => {
+    if (!categoryKey) return [];
+    const builtIn = PRODUCT_MASTER[categoryKey]?.products || [];
+    const custom = customProducts[categoryKey] || [];
+    return [...builtIn, ...custom];
+  };
+
+  // アイテムの現在のカテゴリキーを取得（明示選択優先・なければ商品コードから逆引き）
+  const getItemCategoryKey = (item) => {
+    if (item.categoryKey) return item.categoryKey;
+    if (item.code) {
+      const found = findProductByCode(item.code, customProducts);
+      if (found) return found.categoryKey;
+    }
+    return '';
+  };
+
+  // カテゴリ選択（変更時は商品選択をリセット）
+  const handleCategorySelect = (index, categoryKey) => {
+    const newItems = [...formData.items];
+    newItems[index] = {
+      ...newItems[index],
+      categoryKey,
+      name: '',
+      code: '',
+      price: 0,
+      category: 'other'
+    };
+    setFormData({ ...formData, items: newItems });
   };
 
   const addItem = () => {
@@ -493,35 +535,43 @@ function SalesInput({
                   items={formData.items}
                   customProducts={customProducts}
                   onProductSelect={handleProductSelect}
+                  onCategorySelect={handleCategorySelect}
                   onQuantityChange={handleQuantityChange}
                   onRemove={removeItem}
                   onAdd={addItem}
                 />
               ) : (
                 <>
-                  {formData.items.map((item, index) => (
+                  {formData.items.map((item, index) => {
+                    const itemCategoryKey = getItemCategoryKey(item);
+                    return (
                     <div key={index} style={styles.itemRow}>
+                      {/* カテゴリ選択 */}
+                      <select
+                        value={itemCategoryKey}
+                        onChange={(e) => handleCategorySelect(index, e.target.value)}
+                        style={{ ...styles.productSelect, flex: '0 0 180px' }}
+                      >
+                        <option value="">カテゴリを選択...</option>
+                        {categoryOptions.map(c => (
+                          <option key={c.key} value={c.key}>{c.name}</option>
+                        ))}
+                      </select>
+                      {/* 商品選択（選択中カテゴリのみ表示） */}
                       <select
                         value={item.code}
                         onChange={(e) => handleProductSelect(index, e.target.value)}
                         style={styles.productSelect}
+                        disabled={!itemCategoryKey}
                       >
-                        <option value="">商品を選択...</option>
-                        {Object.entries(PRODUCT_MASTER).map(([key, category]) => {
-                          const builtInProducts = category.products;
-                          const customProds = customProducts[key] || [];
-                          const allProducts = [...builtInProducts, ...customProds];
-
-                          return (
-                            <optgroup key={key} label={category.name}>
-                              {allProducts.map(product => (
-                                <option key={product.code + (product.isCustom ? '_c' : '')} value={product.code}>
-                                  {product.isCustom ? '★ ' : ''}{product.name} (¥{product.price.toLocaleString()})
-                                </option>
-                              ))}
-                            </optgroup>
-                          );
-                        })}
+                        <option value="">
+                          {itemCategoryKey ? '商品を選択...' : '← 先にカテゴリを選択'}
+                        </option>
+                        {getProductsForCategory(itemCategoryKey).map(product => (
+                          <option key={product.code + (product.isCustom ? '_c' : '')} value={product.code}>
+                            {product.isCustom ? '★ ' : ''}{product.name} (¥{product.price.toLocaleString()})
+                          </option>
+                        ))}
                       </select>
                       <input
                         type="number"
@@ -544,7 +594,8 @@ function SalesInput({
                         ✕
                       </button>
                     </div>
-                  ))}
+                    );
+                  })}
                   <button onClick={addItem} style={styles.addItemButton}>
                     ＋ 商品を追加
                   </button>
