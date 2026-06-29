@@ -303,7 +303,15 @@ function Dashboard({ customers, sales, monthlyReports }) {
               </tr>
             </thead>
             <tbody>
-              {sales.slice(-5).reverse().map(sale => (
+              {sales
+                .slice()
+                .sort((a, b) => {
+                  const diff = new Date(b.date) - new Date(a.date);
+                  if (diff !== 0) return diff;                    // 売上日の新しい順
+                  return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); // 同日は登録時刻の新しい順
+                })
+                .slice(0, 5)
+                .map(sale => (
                 <tr key={sale.id}>
                   <td style={styles.td}>{sale.date}</td>
                   <td style={styles.td}>{sale.customerName}</td>
